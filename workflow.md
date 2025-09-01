@@ -1,61 +1,25 @@
-# Whatsapp user workflow for focuspod
+# Whatsapp user workflow for cursor
 
-We are installing office pods in multiple societies for user to book and work in their societies. I will building whatsapp bot for user to be able to do booking (including payment)
+We are installing office pods in multiple societies for user to book and work in their societies. I will building whatsapp bot for user to be able to do booking (including payment and lock pin integration)
 
 ### Following would be key Google sheet databases
 
-#### Society, Pod and digital lock identifiers
+Google sheet workbook name - FocusPod_Bot_Db
 
-|Society Id	|Society name	|Pod ID	|Pod Name	|Pod Address	|Lock device id	|Default lock pin	|
-|---	|---	|---	|---	|---	|---	|---	|
-|1	|Tata Primanti	|11	|Pod 1	|Clubhouse Basement	|111	|9036	|
-|---	|---	|---	|---	|---	|---	|---	|
-|1	|Tata Primanti	|12	|Pod 2	|Clubhouse Ground floor, Reception	|122	|9870	|
-|2	|The Close South	|21	|Pod 1	|	|211	|4925	|
+Sheet Name - Society_Pod
+Columns - SocietyId SocietyName PodId PodName PodAddress LockDeviceid DefaultLockPin
 
-#### User data
+Sheet Name - Users
+Columns - UserId PhoneNumber Name SocietyId FirstBookingDone FirstBookingDate FirstBookingSlotDuration TowerNumber
 
-|User ID	|Phone Number	|Name	|Society ID	|First Booking Done?	|First Booking Date	|First Booking Slot	|Tower number (optional)	|
-|---	|---	|---	|---	|---	|---	|---	|---	|
-|1	|9876543210	|Riya Gupta	|1	|Yes	|24th June 2025	|(10-12)	|	|
-|---	|---	|---	|---	|---	|---	|---	|---	|
-|2	|9876000001	|Mehul Shah	|1	|No	|	|	|	|
+Sheet Name - Booking
+Columns - TransactionId TransactionDate TransactionTime TransactionAmount BookingDate BookedSlotDuration SlotStartTime SlotEndTime AssignedLockPin UserId PodId SocietyId
 
-#### Booking data
+Sheet Name - Availability
+Columns - SocietyName Date SlotStart SlotEnd PodId Status
 
-|Transaction ID	|Transaction Date	|Transaction time	|Transaction amount	|Booking date	|Slot duration booked	|Slot start and end time	|Assigned Lock pin number	|User ID	|Pod ID	|Society ID	|
-|---	|---	|---	|---	|---	|---	|---	|---	|---	|---	|---	|
-|1	|10 July 2025	|11:23 am	|199	|11 July	|2	|(10-12)	|	|1	|11	|1	|
-|---	|---	|---	|---	|---	|---	|---	|---	|---	|---	|---	|
-|2	|	|	|	|	|	|	|	|2	|11	|1	|
-
-#### **POD Availability System**
-
-|Society	|Date	|Slot Start	|Slot End	|Pod ID	|Status	|
-|---	|---	|---	|---	|---	|---	|
-|Tata Primanti	|June 23, 2025	|6:00 am	|8:00 am	|12	|Free	|
-|Tata Primanti	|June 23, 2025	|7:00 am	|9:00 am	|11	|Booked	|
-|Tata Primanti	|June 23, 2025	|8:00 am	|10:00 am	|12	|Free	|
-|Tata Primanti	|June 23, 2025	|9:00 am	|11:00 am	|11	|Free	|
-|Tata Primanti	|June 23, 2025	|10:00 am	|12:00 pm	|11	|Free	|
-|Tata Primanti	|June 23, 2025	|11:00 am	|1:00 pm	|11	|Free	|
-|Tata Primanti	|June 23, 2025	|12:00 pm	|2:00 pm	|11	|Free	|
-|Tata Primanti	|June 23, 2025	|1:00 pm	|3:00 pm	|11	|Free	|
-|Tata Primanti	|June 23, 2025	|2:00 pm	|4:00 pm	|11	|Free	|
-|Tata Primanti	|June 23, 2025	|3:00 pm	|5:00 pm	|11	|Free	|
-|Tata Primanti	|June 23, 2025	|4:00 pm	|6:00 pm	|11	|Free	|
-|Tata Primanti	|June 23, 2025	|5:00 pm	|7:00 pm	|11	|Free	|
-|Tata Primanti	|June 23, 2025	|6:00 pm	|8:00 pm	|11	|Free	|
-|Tata Primanti	|June 23, 2025	|7:00 pm	|9:00 pm	|11	|Free	|
-
-#### Pricing DB
-
-|Slot	|Price	|
-|---	|---	|
-|2	|10	|
-|---	|---	|
-|4	|20	|
-|8	|30	|
+Sheet Name - Pricing
+Columns - SlotDuration Price
 
 ### Detailed whatsapp bot Workflow
 
@@ -65,23 +29,23 @@ We are installing office pods in multiple societies for user to book and work in
 
 1. User scan QR code, Auto identify society using QR code. Each pod gets a **unique QR code** that contains pre-filled info. [https://wa.me/919036089111?text=Hi, I would like to book pod at Tata Primanti](https://wa.me/919036089111?text=Hi,%20I%20would%20like%20to%20book%20pod%20at%20Tata%20Primanti), OR
 2. User messages WA business number directly - “Hi” or any other text
-3. Welcome Message - “Hi! 👋 Welcome to FocusPod. Let's get you a quiet pod to work from your society.” 
-4. User Detection (New or Existing) - Bot lookup User DB using phone number. 
-    1. If new user, Message → Since you're booking for the first time. Your first pod booking is FREE. Please share your name to get started.
-        1. Update user db with phone number, name and marks `First Booking Done = No` ****
-    2. If existing user → continue to booking.
-5. Detect Society - 
+3. User Detection (New or Existing) - Bot lookup Users DB using phone number or if phone number exists but **FirstBookingDone is No**
+    1. If new user, Message - “Hi! 👋 Welcome to FocusPod. Since you're booking for the first time. Your first pod booking is FREE.” Show two clickable button [🔐 Book a Pod] [❓Ask a Question].
+    2. If phone number does not exits - Update user db with phone number, generate User id and marks `First Booking Done = No` ****
+    3. If existing user → Hi ${name}! 👋 Ready to book your pod? Show two clickable button [🔐 Book a Pod] [❓Ask a Question].
+4. Ask a Question -
+    1. If user chooses - “Ask a Question” - We will add flow later, for now - add below placeholder message 
+    2. 🤖 *No problem! Our team is here to help.*Please type your question, We’ll connect you with a human shortly. 🧑‍💼
+5. User chooses - Book a pod, Ask Name if not present
+    1. If user clicks on book a pod, And if name field is empty in Users db, send message - Please share your *name* to get started. Update users db with name
+    2. If name exits in db, send message - Hi ${name}! Lets book a quiet pod in your society
+6. Detect Society - 
     1. If QR used → prefill society in user db, If not → check Society db, if only one society is onboarded → prefill that society in user db
     2. if multiple societies are onboarded, Message
         1. 🏘️ *Please select your residential society:*
             List Onboarded societies as button - [Tata Primanti] [DLF Phase 5] [Emerald Hills]
             *(Choose the one you belong to)*
         2. update user society in user db
-6. `Choose an option: [🔐 Book a Pod] [❓Ask a Question]`
-    1. User chooses - Book a pod → continue to booking.
-    2. If user chooses - “Ask a Question” 
-        1. 🤖 *No problem! Our team is here to help.*
-             Please type your question, We’ll connect you with a human shortly. 🧑‍💼
 
 #### B. Date & Slot Selection
 
@@ -91,7 +55,7 @@ We are installing office pods in multiple societies for user to book and work in
 2. Duration Selection
     1. Choose duration: [2hr – ₹199] [4hr – ₹349] [8hr – ₹599] [Not sure? Let’s talk to the team 👥]
         1. if user selects “not sure”, Message → No worries! Team will call you shortly and assist you with the booking
-3. Based on the duration, check availabity sheet (Backend logic - check slots on all the pods against a society, and share 5 available slots for selected duration)
+3. Based on the duration, check availabity sheet (Backend logic - check slots on both the pods, and share 6 available slots for selected duration)
     1. Case A: Slots found (any duration)
         1. **Show first 5** 🕑 Here are the available slots for *{duration} hour* booking: [09:00–11:00][10:00–12:00][11:00–13:00][12:00–14:00][13:00–15:00] 🔄 *Need a different slot]*
         2. **If “Need a different slot” is clicked, show next 5:** More options for *{duration}* hour slots: [14:00–16:00][15:00–17:00][16:00–18:00][17:00–19:00][18:00–20:00] 🔄 *[Show remaining]*

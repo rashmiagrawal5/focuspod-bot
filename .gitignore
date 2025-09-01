@@ -1,3 +1,22 @@
-.env
+# Dependencies
 node_modules/
+
+# Environment variables
+.env
+
+# Google API credentials
 credentials.json
+
+# Log files
+logs/
+*.log
+
+# Backup files
+backup-files/
+
+# Mac system files
+.DS_Store
+
+# Other temporary files
+*.tmp
+.cache/
