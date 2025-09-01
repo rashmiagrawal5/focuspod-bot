@@ -1,19 +1,33 @@
 const { google } = require('googleapis');
 const path = require('path');
 
-const auth = new google.auth.GoogleAuth({
-  keyFile: path.join(__dirname, 'credentials.json'),
-  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-});
+// FIXED: Handle both local and Railway deployment
+let auth;
+if (process.env.GOOGLE_CREDENTIALS) {
+  // Production: Use environment variable
+  auth = new google.auth.GoogleAuth({
+    credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+} else {
+  // Development: Use local file
+  auth = new google.auth.GoogleAuth({
+    keyFile: path.join(__dirname, 'credentials.json'),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+}
 
 const SPREADSHEET_ID = '1TOQ9QT2zYj7uH0Y32OIHDY-iUC0gvYMRnLNJLaYhfwY';
 const USERS_SHEET = 'Users';
-const PRICING_SHEET = 'Pricing'; // NEW: Added pricing sheet
+const PRICING_SHEET = 'Pricing';
 
 async function getSheetClient() {
   const client = await auth.getClient();
   return google.sheets({ version: 'v4', auth: client });
 }
+
+// Keep all your existing functions below this line...
+// (rest of your sheets.js code remains the same)
 
 // NEW: Get dynamic pricing from Google Sheets
 async function getPricing() {
@@ -122,7 +136,7 @@ async function addNewUser(phone) {
     const rows = res.data.values || [];
     const nextUserId = rows.length + 1;
 
-    console.log(`📝 Creating new user with ID: ${nextUserId}, Phone: ${phone}`);
+    console.log(`🔢 Creating new user with ID: ${nextUserId}, Phone: ${phone}`);
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
@@ -154,7 +168,7 @@ async function updateUserName(phone, name) {
       return false;
     }
 
-    console.log(`📝 Updating name for user at row ${user.rowIndex}: ${name}`);
+    console.log(`🔄 Updating name for user at row ${user.rowIndex}: ${name}`);
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
@@ -244,7 +258,7 @@ async function updateFirstBookingStatus(phone, bookingDate, slotDuration) {
       return false;
     }
 
-    console.log(`📝 Updating first booking status for user at row ${user.rowIndex}`);
+    console.log(`🔄 Updating first booking status for user at row ${user.rowIndex}`);
 
     // Update FirstBookingDone, FirstBookingDate, and FirstBookingSlotDuration
     await sheets.spreadsheets.values.update({
@@ -288,7 +302,7 @@ async function addBookingRecord(bookingData) {
       pinStatus       // NEW: PIN status (active/expired/fallback_default/failed)
     } = bookingData;
 
-    console.log(`📝 Adding booking record for user ${userId}`);
+    console.log(`🔄 Adding booking record for user ${userId}`);
     console.log(`🔐 PIN: ${assignedLockPin}, Status: ${pinStatus}, PWD ID: ${keyboardPwdId}`);
 
     await sheets.spreadsheets.values.append({
