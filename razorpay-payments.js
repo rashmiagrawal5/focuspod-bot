@@ -55,7 +55,7 @@ async function createAndSendPaymentLink(phone, amount, bookingData) {
       },
       callback_url: `${process.env.WEBHOOK_BASE_URL}/payment-success`,
       callback_method: 'get',
-      expire_by: Math.floor(Date.now() / 1000) + 3600
+      expire_by: Math.floor(Date.now() / 1000) + 900
     };
 
     const paymentLink = await razorpay.paymentLink.create(paymentLinkData);
@@ -86,25 +86,35 @@ async function createAndSendPaymentLink(phone, amount, bookingData) {
 
     await sendMessage(phone, paymentMessage);
     
-    setTimeout(async () => {
-      try {
-        await sendButtons(phone, "Payment Status:", [
-          "✅ Payment Complete",
-          "❓ Need Help", 
-          "❌ Cancel Booking"
-        ]);
-      } catch (buttonError) {
-        console.log(`⚠️ Button sending failed (not critical): ${buttonError.message}`);
-        // Don't throw - this prevents the main catch block from running
-      }
-    }, 5000);
-    
-    setTimeout(() => {
-      if (global.pendingPayments[paymentLink.id]) {
-        delete global.pendingPayments[paymentLink.id];
-        console.log(`🧹 Cleaned up expired payment: ${paymentLink.id}`);
-      }
-    }, 3600000);
+    // ✅ No immediate status buttons - webhooks handle everything
+    console.log(`💳 Payment link sent to ${phone}, waiting for webhook confirmation...`);
+
+// Send reminder after 5 minutes (if payment still pending)
+setTimeout(async () => {
+  if (global.pendingPayments[paymentLink.id]) {
+    try {
+      await sendMessage(phone, 
+        `⏰ *Payment Reminder*\n\n` +
+        `Your payment link will expire in 10 minutes.\n\n` +
+        `💳 Amount: ₹${amount}\n` +
+        `🆔 Booking: ${bookingData.transactionId}\n\n` +
+        `Please complete your payment to confirm the booking.\n\n` +
+        `Having issues? Reply 'help' for support.`
+      );
+      console.log(`⏰ 5-minute payment reminder sent to ${phone}`);
+    } catch (error) {
+      console.log(`⚠️ Failed to send payment reminder: ${error.message}`);
+    }
+  }
+}, 300000); // 5 minutes
+
+// Clean up expired payment after 15 minutes
+setTimeout(() => {
+  if (global.pendingPayments[paymentLink.id]) {
+    delete global.pendingPayments[paymentLink.id];
+    console.log(`🧹 Cleaned up expired payment (15 min): ${paymentLink.id}`);
+  }
+}, 900000); // 15 minutes
 
     return {
       success: true,
@@ -168,6 +178,13 @@ async function handleRazorpayWebhook(webhookBody, webhookSignature) {
 
     const { event, payload } = webhookBody;
     console.log(`📨 Webhook event: ${event}`);
+    console.log(`🔍 WEBHOOK TEST - Event Details:`, {
+      event: event,
+      payment_link_id: payload?.payment_link?.entity?.id,
+      payment_id: payload?.payment?.entity?.id,
+      amount: payload?.payment_link?.entity?.amount,
+      status: payload?.payment_link?.entity?.status
+    });
 
     // Handle different events
     switch (event) {
