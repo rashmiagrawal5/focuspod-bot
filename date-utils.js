@@ -1,16 +1,17 @@
-// date-utils.js - FIXED: Indian Standard Time for all date operations
+// date-utils.js - FIXED: Simpler IST handling
 
-// Helper function to get current IST time
+// Helper function to get current IST time - SIMPLIFIED
 function getISTTime() {
-  const now = new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"});
-  return new Date(now);
+  // Much simpler: just add 5.5 hours to UTC
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+  return new Date(now.getTime() + istOffset);
 }
 
-// Convert any date to the Google Sheets format: "Aug 21, 2025"
+// Convert any date to Google Sheets format: "Sep 02, 2025"
 function toSheetFormat(date) {
   if (!date) return null;
   
-  // Handle different input types
   let dateObj;
   if (typeof date === 'string') {
     dateObj = new Date(date);
@@ -20,14 +21,12 @@ function toSheetFormat(date) {
     return null;
   }
   
-  // Check if date is valid
   if (isNaN(dateObj.getTime())) return null;
   
   const options = { 
     year: 'numeric', 
     month: 'short', 
-    day: '2-digit',
-    timeZone: 'Asia/Kolkata'  // FIXED: Always use IST
+    day: '2-digit'
   };
   return dateObj.toLocaleDateString('en-US', options);
 }
@@ -38,7 +37,7 @@ function fromSheetFormat(sheetDateString) {
   return new Date(sheetDateString);
 }
 
-// Simple display format for users: "21 Aug"
+// Simple display format for users: "2 Sep"
 function toDisplayFormat(date) {
   if (!date) return null;
   
@@ -55,19 +54,18 @@ function toDisplayFormat(date) {
   
   const options = { 
     day: 'numeric',
-    month: 'short',
-    timeZone: 'Asia/Kolkata'  // FIXED: Always use IST
+    month: 'short'
   };
   return dateObj.toLocaleDateString('en-US', options);
 }
 
-// FIXED: Get today in IST and convert to sheet format
+// Get today in IST and convert to sheet format
 function getTodaySheetFormat() {
   const todayIST = getISTTime();
   return toSheetFormat(todayIST);
 }
 
-// FIXED: Get tomorrow in IST and convert to sheet format  
+// Get tomorrow in IST and convert to sheet format  
 function getTomorrowSheetFormat() {
   const todayIST = getISTTime();
   const tomorrow = new Date(todayIST);
@@ -75,7 +73,7 @@ function getTomorrowSheetFormat() {
   return toSheetFormat(tomorrow);
 }
 
-// FIXED: Get day after tomorrow in IST and convert to sheet format
+// Get day after tomorrow in IST and convert to sheet format
 function getDayAfterSheetFormat() {
   const todayIST = getISTTime();
   const dayAfter = new Date(todayIST);
@@ -90,5 +88,5 @@ module.exports = {
   getTodaySheetFormat,
   getTomorrowSheetFormat,
   getDayAfterSheetFormat,
-  getISTTime  // NEW: Export IST time helper
+  getISTTime
 };
