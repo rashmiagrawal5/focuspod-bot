@@ -4,7 +4,7 @@ const { google } = require('googleapis');
 const path = require('path');
 
 // Import date utilities for consistency  
-const { toSheetFormat } = require('./date-utils');
+const { toSheetFormat, getISTTime } = require('./date-utils');
 
 // FIXED: Handle both local and Railway deployment
 let auth;
@@ -146,54 +146,66 @@ async function getDateConstraints(sheets, date) {
   return { bookings, maintenance };
 }
 
-// FIXED: Generate slot candidates with proper date handling
+
+// FIXED: Generate slot candidates using centralized IST logic
 function generateSlotCandidates(durationHours, date) {
   const candidates = [];
   const durationMinutes = durationHours * 60;
   
-  // FIXED: Check if this is today for current time bonus using consistent date format
-  const today = new Date();
-  const todayFormatted = toSheetFormat(today);
+  // FIXED: Use centralized IST time from date-utils
+  const todayIST = getISTTime();
+  const todayFormatted = toSheetFormat(todayIST);
   const isToday = date === todayFormatted;
   
-  console.log(`📅 DEBUG: Today formatted: ${todayFormatted}, Target date: ${date}, Is today: ${isToday}`);
+  console.log(`📅 DEBUG: IST Today: ${todayFormatted}, Target date: ${date}, Is today: ${isToday}`);
   
   if (isToday) {
-    // CURRENT TIME BONUS - immediate start option
-    const currentHour = today.getHours();
-    const currentMinute = today.getMinutes();
+    // CURRENT TIME BONUS - immediate start option using IST
+    const currentHour = todayIST.getHours();
+    const currentMinute = todayIST.getMinutes();
     const currentTotalMinutes = currentHour * 60 + currentMinute;
     const operatingEndMinutes = 21 * 60; // 21:00
+    
+    console.log(`🕐 Current IST time: ${currentHour}:${currentMinute} (${currentTotalMinutes} minutes)`);
     
     // Only if there's enough time left
     if (currentTotalMinutes + durationMinutes <= operatingEndMinutes) {
       const startTime = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
       const endTime = minutesToTime(currentTotalMinutes + durationMinutes);
       
+      console.log(`⚡ Adding current time bonus slot: ${startTime}-${endTime}`);
+      
       candidates.push({
         startTime: startTime,
         endTime: endTime,
-        timeSlot: `${startTime}-${endTime}`,  // ✅ FIXED: Changed em dash to regular dash
+        timeSlot: `${startTime}-${endTime}`,
         startMinutes: currentTotalMinutes,
         endMinutes: currentTotalMinutes + durationMinutes,
         isCurrentTimeBonus: true
       });
+    } else {
+      console.log(`⏰ Not enough time left today for ${durationHours}hr booking`);
     }
     
     // REGULAR HOURLY SLOTS - start from next hour
     const nextHour = currentHour + 1;
+    console.log(`🕑 Adding regular hourly slots from ${nextHour}:00`);
+    
     for (let hour = nextHour; hour <= 21 - durationHours; hour++) {
       candidates.push(createHourlySlot(hour, durationHours));
     }
   } else {
     // FUTURE DATES - only regular hourly slots from 6 AM
+    console.log(`📅 Future date - adding slots from 6 AM to ${21 - durationHours} PM`);
     for (let hour = 6; hour <= 21 - durationHours; hour++) {
       candidates.push(createHourlySlot(hour, durationHours));
     }
   }
   
+  console.log(`📊 Generated ${candidates.length} total candidates`);
   return candidates;
 }
+
 
 // Create a clean hourly slot
 function createHourlySlot(hour, durationHours) {

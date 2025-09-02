@@ -4,7 +4,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 // Import date utilities for consistency
-const { toSheetFormat, fromSheetFormat } = require('./date-utils');
+const { toSheetFormat, fromSheetFormat, getISTTime } = require('./date-utils');
 
 // TTLock API Configuration
 const TTLOCK_API_BASE = 'https://euapi.ttlock.com'; // Your working region
@@ -73,29 +73,29 @@ async function generateBookingPIN(lockId, startTime, endTime, bookingId, booking
   console.log(`⏰ Duration: ${startTime} - ${endTime}`);
   console.log(`📅 Received booking date: "${bookingDate}"`);
   
- // FIXED: Properly convert the booking date from sheet format
- let targetDate;
-  
- if (bookingDate) {
-   // Convert from sheet format to Date object
-   targetDate = fromSheetFormat(bookingDate);
-   
-   // If conversion failed, try direct parsing
-   if (!targetDate || isNaN(targetDate.getTime())) {
-     console.log(`⚠️ Sheet format conversion failed, trying direct parsing...`);
-     targetDate = new Date(bookingDate);
-   }
-   
-   // Final fallback to today
-   if (!targetDate || isNaN(targetDate.getTime())) {
-     console.log(`❌ All date parsing failed for "${bookingDate}", using today`);
-     targetDate = new Date();
-   }
- } else {
-   console.log(`📅 No booking date provided, using today`);
-   targetDate = new Date();
- }
+ // FIXED: Properly convert the booking date using IST
+let targetDate;
  
+if (bookingDate) {
+  // Convert from sheet format to Date object
+  targetDate = fromSheetFormat(bookingDate);
+  
+  // If conversion failed, try direct parsing
+  if (!targetDate || isNaN(targetDate.getTime())) {
+    console.log(`⚠️ Sheet format conversion failed, trying direct parsing...`);
+    targetDate = new Date(bookingDate);
+  }
+  
+  // Final fallback to IST today
+  if (!targetDate || isNaN(targetDate.getTime())) {
+    console.log(`❌ All date parsing failed for "${bookingDate}", using IST today`);
+    targetDate = getISTTime();
+  }
+} else {
+  console.log(`📅 No booking date provided, using IST today`);
+  targetDate = getISTTime();
+}
+
  console.log(`📅 Final target date: ${targetDate.toDateString()}`);
  
  // Convert times to TTLock format (timestamps in milliseconds)
@@ -267,11 +267,24 @@ async function handleBookingLockAccess(bookingData) {
   }
 }
 
-// Convert time string to timestamp for TTLock API
-function convertToTimestamp(timeString, date = new Date()) {
+// Convert time string to timestamp for TTLock API using IST
+function convertToTimestamp(timeString, date = null) {
+  let targetDate;
+  
+  if (date) {
+    // Use provided date
+    targetDate = new Date(date);
+  } else {
+    // Use current IST time
+    targetDate = getISTTime();
+  }
+  
   const [hours, minutes] = timeString.split(':').map(Number);
-  const timestamp = new Date(date);
+  const timestamp = new Date(targetDate);
   timestamp.setHours(hours, minutes, 0, 0);
+  
+  console.log(`🕐 TTLock: Converting ${timeString} on ${targetDate.toDateString()} to timestamp`);
+  
   return timestamp.getTime(); // TTLock uses milliseconds
 }
 
