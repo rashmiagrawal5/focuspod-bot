@@ -49,8 +49,12 @@ async function getAvailableSlots(societyName, date, durationHours) {
     // Step 2: Get all constraints for this date
     const constraints = await getDateConstraints(sheets, date);
     
-    // Step 3: Generate ALL possible slot candidates
-    const allCandidates = generateSlotCandidates(durationHours, date);
+    // Step 3: Get operating hours from first pod (same for all pods in society)
+const operatingHours = pods[0].operatingHours; // e.g., "06:00-23:00"
+console.log(`🕐 Using operating hours for ${societyName}: ${operatingHours}`);
+
+// Step 3: Generate ALL possible slot candidates with actual operating hours
+const allCandidates = generateSlotCandidates(durationHours, date, operatingHours);
     console.log(`📅 Generated ${allCandidates.length} slot candidates`);
     
     // Step 4: Filter - keep only slots where ANY pod is available
@@ -147,12 +151,20 @@ async function getDateConstraints(sheets, date) {
 }
 
 
-// FIXED: Generate slot candidates using centralized IST logic
-function generateSlotCandidates(durationHours, date) {
+function generateSlotCandidates(durationHours, date, operatingHours) {
   const candidates = [];
   const durationMinutes = durationHours * 60;
   
-  // FIXED: Use centralized IST time from date-utils
+  // Parse operating hours (e.g., "06:00-23:00")
+  const [startHourStr, endHourStr] = operatingHours.split('-');
+  const operatingStartMinutes = timeToMinutes(startHourStr);
+  const operatingEndMinutes = timeToMinutes(endHourStr);
+  const operatingEndHour = Math.floor(operatingEndMinutes / 60);
+  
+  console.log(`🕐 Parsed operating hours: ${startHourStr}-${endHourStr} (${operatingStartMinutes}-${operatingEndMinutes} minutes)`);
+  console.log(`🕐 Operating end hour: ${operatingEndHour} (was hardcoded to 21)`);
+  
+  // Use centralized IST time from date-utils
   const todayIST = getISTTime();
   const todayFormatted = toSheetFormat(todayIST);
   const isToday = date === todayFormatted;
@@ -164,7 +176,6 @@ function generateSlotCandidates(durationHours, date) {
     const currentHour = todayIST.getHours();
     const currentMinute = todayIST.getMinutes();
     const currentTotalMinutes = currentHour * 60 + currentMinute;
-    const operatingEndMinutes = 21 * 60; // 21:00
     
     console.log(`🕐 Current IST time: ${currentHour}:${currentMinute} (${currentTotalMinutes} minutes)`);
     
@@ -184,20 +195,22 @@ function generateSlotCandidates(durationHours, date) {
         isCurrentTimeBonus: true
       });
     } else {
-      console.log(`⏰ Not enough time left today for ${durationHours}hr booking`);
+      console.log(`⏰ Not enough time left today for ${durationHours}hr booking (need ${durationMinutes} mins, have ${operatingEndMinutes - currentTotalMinutes} mins)`);
     }
     
-    // REGULAR HOURLY SLOTS - start from next hour
+    // REGULAR HOURLY SLOTS - start from next hour, use actual operating end hour
     const nextHour = currentHour + 1;
-    console.log(`🕑 Adding regular hourly slots from ${nextHour}:00`);
+    console.log(`🕑 Adding regular hourly slots from ${nextHour}:00 to ${operatingEndHour - durationHours}:00`);
     
-    for (let hour = nextHour; hour <= 21 - durationHours; hour++) {
+    for (let hour = nextHour; hour <= operatingEndHour - durationHours; hour++) {
       candidates.push(createHourlySlot(hour, durationHours));
     }
   } else {
-    // FUTURE DATES - only regular hourly slots from 6 AM
-    console.log(`📅 Future date - adding slots from 6 AM to ${21 - durationHours} PM`);
-    for (let hour = 6; hour <= 21 - durationHours; hour++) {
+    // FUTURE DATES - regular hourly slots using actual operating hours
+    const operatingStartHour = Math.floor(operatingStartMinutes / 60);
+    console.log(`📅 Future date - adding slots from ${operatingStartHour}:00 to ${operatingEndHour - durationHours}:00`);
+    
+    for (let hour = operatingStartHour; hour <= operatingEndHour - durationHours; hour++) {
       candidates.push(createHourlySlot(hour, durationHours));
     }
   }
@@ -205,7 +218,6 @@ function generateSlotCandidates(durationHours, date) {
   console.log(`📊 Generated ${candidates.length} total candidates`);
   return candidates;
 }
-
 
 // Create a clean hourly slot
 function createHourlySlot(hour, durationHours) {
