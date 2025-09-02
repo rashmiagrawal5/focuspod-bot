@@ -1142,11 +1142,15 @@ async function handleButtonReply(phone, buttonText) {
       console.log(`🔍 DEBUG: Matched Show More`);
       await handleShowMoreSlots(phone);
     }  
-    // Handle alternative options
-    if (buttonText.includes("Try Different Date") || buttonText.includes("Try Different Duration")) {
-      await handleAlternativeChoice(phone, buttonText);
-      return;
-    }
+    // Handle alternative options (truncation-safe)
+if (buttonText.includes("Try Different Date") || 
+    buttonText.includes("Try Different Dat") ||  // WhatsApp truncation
+    buttonText.includes("Try Different Duration") ||
+    buttonText.includes("Try Different Dur")) {   // WhatsApp truncation
+  console.log(`📅 DEBUG: Matched alternative option: "${buttonText}"`);
+  await handleAlternativeChoice(phone, buttonText);
+  return;
+}
     
     // Handle payment buttons
     if (buttonText.includes("Pay Now") || buttonText.includes("💳")) {
@@ -1221,9 +1225,11 @@ async function handleOtherDateInput(phone, dateInput) {
 
 // Handle alternative choices
 async function handleAlternativeChoice(phone, choice) {
-  if (choice.includes("Try Different Date")) {
+  if (choice.includes("Try Different Date") || choice.includes("Try Different Dat")) {
+    console.log(`📅 DEBUG: Showing date selection again for: "${choice}"`);
     await handleDateSelection(phone);
-  } else if (choice.includes("Try Different Duration")) {
+  } else if (choice.includes("Try Different Duration") || choice.includes("Try Different Dur")) {
+    console.log(`⏰ DEBUG: Showing duration selection again for: "${choice}"`);
     await handleDurationSelection(phone);
   }
 }
