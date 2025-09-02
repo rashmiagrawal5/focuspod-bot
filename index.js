@@ -3,38 +3,27 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 
 // ==========================================
-// ENHANCED LOGGING SYSTEM
+// SIMPLIFIED LOGGING SYSTEM
 // ==========================================
-const fs = require('fs');
-const path = require('path');
 
-// Create logs directory if it doesn't exist
-const logsDir = path.join(__dirname, 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir);
+// Simple logging wrapper - only log important events
+function logInfo(message) {
+  console.log(`ℹ️ ${new Date().toISOString()} - ${message}`);
 }
 
-// Create log file with current date
-const logFile = path.join(logsDir, `bot-${new Date().toISOString().split('T')[0]}.log`);
-
-// Override console.log to also write to file
-const originalLog = console.log;
-console.log = function(...args) {
-  const message = args.join(' ');
-  const timestamp = new Date().toISOString();
-  
-  // Write to file
-  try {
-    fs.appendFileSync(logFile, `[${timestamp}] ${message}\n`);
-  } catch (error) {
-    // If file writing fails, continue with console output
+function logError(message, error = null) {
+  console.error(`❌ ${new Date().toISOString()} - ${message}`);
+  if (error && error.stack) {
+    console.error(error.stack);
   }
-  
-  // Also output to console
-  originalLog.apply(console, args);
-};
+}
 
-console.log('📋 Enhanced logging initialized');
+function logSuccess(message) {
+  console.log(`✅ ${new Date().toISOString()} - ${message}`);
+}
+
+// Only log server startup and critical events
+console.log('🚀 FocusPod Bot Starting...');
 
 // ==========================================
 // EXPRESS APP SETUP
@@ -178,9 +167,11 @@ app.get('/webhook', (req, res) => {
 // ==========================================
 app.post('/webhook', async (req, res) => {
   try {
-    console.log('📡 POST /webhook from', req.ip);
-    console.log('Headers:', req.headers);
-    console.log('🔨 Received webhook:', JSON.stringify(req.body, null, 2));
+    // Only log essential webhook info
+if (req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
+  const message = req.body.entry[0].changes[0].value.messages[0];
+  logInfo(`Message from ${message.from}: ${message.text?.body || message.type}`);
+}
     
     const entry = req.body.entry?.[0];
     const changes = entry?.changes?.[0];
@@ -628,6 +619,5 @@ app.listen(PORT, () => {
     console.log('✅ All required environment variables are set');
   }
   
-  console.log('📄 Log file:', logFile);
   console.log('🎯 Ready to receive WhatsApp messages!');
 });

@@ -6,10 +6,21 @@ const path = require('path');
 // Import date utilities for consistency  
 const { toSheetFormat } = require('./date-utils');
 
-const auth = new google.auth.GoogleAuth({
-  keyFile: path.join(__dirname, 'credentials.json'),
-  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-});
+// FIXED: Handle both local and Railway deployment
+let auth;
+if (process.env.GOOGLE_CREDENTIALS) {
+  // Production: Use environment variable
+  auth = new google.auth.GoogleAuth({
+    credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+} else {
+  // Development: Use local file
+  auth = new google.auth.GoogleAuth({
+    keyFile: path.join(__dirname, 'credentials.json'),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+}
 
 const SPREADSHEET_ID = '1TOQ9QT2zYj7uH0Y32OIHDY-iUC0gvYMRnLNJLaYhfwY';
 const POD_DAILY_STATUS_SHEET = 'Pod_Daily_Status';

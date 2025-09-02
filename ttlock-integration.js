@@ -144,10 +144,21 @@ async function getDefaultPIN(lockId) {
     const { google } = require('googleapis');
     const path = require('path');
 
-    const auth = new google.auth.GoogleAuth({
-      keyFile: path.join(__dirname, 'credentials.json'),
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
+    // FIXED: Handle both local and Railway deployment
+let auth;
+if (process.env.GOOGLE_CREDENTIALS) {
+  // Production: Use environment variable
+  auth = new google.auth.GoogleAuth({
+    credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+} else {
+  // Development: Use local file
+  auth = new google.auth.GoogleAuth({
+    keyFile: path.join(__dirname, 'credentials.json'),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+}
 
     const sheets = google.sheets({ version: 'v4', auth: await auth.getClient() });
     const SPREADSHEET_ID = '1TOQ9QT2zYj7uH0Y32OIHDY-iUC0gvYMRnLNJLaYhfwY';
