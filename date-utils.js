@@ -81,6 +81,23 @@ function getDayAfterSheetFormat() {
   return toSheetFormat(dayAfter);
 }
 
+// Convert "HH:mm" + Date object (in IST) to UTC timestamp for TTLock
+function convertToTimestamp(timeString, dateObj) {
+  if (!timeString || !dateObj) return null;
+
+  const [hours, minutes] = timeString.split(':').map(Number);
+
+  // Work on a copy of the date
+  const d = new Date(dateObj);
+  d.setHours(hours, minutes || 0, 0, 0);
+
+  // Adjust IST → UTC (IST = UTC+5:30, so subtract 5.5h)
+  const utcMillis = d.getTime() - (5.5 * 60 * 60 * 1000);
+
+  return utcMillis;
+}
+
+
 module.exports = {
   toSheetFormat,
   fromSheetFormat,
@@ -88,5 +105,6 @@ module.exports = {
   getTodaySheetFormat,
   getTomorrowSheetFormat,
   getDayAfterSheetFormat,
-  getISTTime
+  getISTTime,
+  convertToTimestamp
 };

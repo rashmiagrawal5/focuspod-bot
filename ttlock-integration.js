@@ -4,7 +4,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 // Import date utilities for consistency
-const { toSheetFormat, fromSheetFormat, getISTTime } = require('./date-utils');
+const { toSheetFormat, fromSheetFormat, getISTTime, convertToTimestamp } = require('./date-utils');
 
 // TTLock API Configuration
 const TTLOCK_API_BASE = 'https://euapi.ttlock.com'; // Your working region
@@ -267,13 +267,6 @@ async function handleBookingLockAccess(bookingData) {
   }
 }
 
-// Convert time string to timestamp for TTLock API using IST
-function convertToTimestamp(timeString, date = new Date()) {
-  const [hours, minutes] = timeString.split(':').map(Number);
-  const timestamp = new Date(date);
-  timestamp.setHours(hours, minutes, 0, 0);
-  return timestamp.getTime(); // TTLock uses milliseconds
-}
 
 // Test TTLock connection
 async function testTTLockConnection() {
