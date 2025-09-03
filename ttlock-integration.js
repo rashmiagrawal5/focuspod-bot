@@ -272,20 +272,23 @@ function convertToTimestamp(timeString, date = null) {
   let targetDate;
   
   if (date) {
-    // Use provided date
+    // Parse the date normally (don't apply IST offset here)
     targetDate = new Date(date);
   } else {
-    // Use current IST time
-    targetDate = getISTTime();
+    // Use current date without IST adjustment  
+    targetDate = new Date();
   }
   
   const [hours, minutes] = timeString.split(':').map(Number);
+  
+  // Create timestamp for the exact local time (IST)
+  // TTLock API expects local timezone timestamps
   const timestamp = new Date(targetDate);
   timestamp.setHours(hours, minutes, 0, 0);
   
-  console.log(`🕐 TTLock: Converting ${timeString} on ${targetDate.toDateString()} to timestamp`);
+  console.log(`🕐 TTLock: Converting ${timeString} on ${targetDate.toDateString()} to ${timestamp.toLocaleString('en-IN')}`);
   
-  return timestamp.getTime(); // TTLock uses milliseconds
+  return timestamp.getTime();
 }
 
 // Test TTLock connection
