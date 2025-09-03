@@ -39,7 +39,11 @@ function toDisplayFormat(date) {
   if (!date) return null;
 
   if (typeof date === "string") {
-    dt = DateTime.fromISO(date, { zone: IST_ZONE });
+    // Try sheet format first
+    dt = DateTime.fromFormat(date, "MMM dd, yyyy", { zone: IST_ZONE });
+    if (!dt.isValid) {
+      dt = DateTime.fromISO(date, { zone: IST_ZONE });
+    }
   } else if (date instanceof Date) {
     dt = DateTime.fromJSDate(date, { zone: IST_ZONE });
   } else if (date.setZone) {
@@ -48,8 +52,9 @@ function toDisplayFormat(date) {
     return null;
   }
 
-  return dt.toFormat("d MMM");
+  return dt.toFormat("d MMM"); // e.g. "4 Sep"
 }
+
 
 // Get today in IST and convert to sheet format
 function getTodaySheetFormat() {

@@ -3,6 +3,8 @@
 const axios = require('axios');
 require('dotenv').config();
 
+const { DateTime } = require("luxon");
+
 // Import date utilities for consistency
 const { toSheetFormat, fromSheetFormat, getISTTime, convertToTimestamp } = require('./date-utils');
 
@@ -81,16 +83,16 @@ if (bookingDate) {
   targetDate = fromSheetFormat(bookingDate);
   
   // If conversion failed, try direct parsing
-  if (!targetDate || isNaN(targetDate.getTime())) {
-    console.log(`⚠️ Sheet format conversion failed, trying direct parsing...`);
-    targetDate = new Date(bookingDate);
-  }
+  if (!targetDate || !targetDate.isValid) {
+  console.log(`⚠️ Sheet format conversion failed, trying direct parsing...`);
+  targetDate = DateTime.fromJSDate(new Date(bookingDate), { zone: "Asia/Kolkata" });
+}
   
   // Final fallback to IST today
-  if (!targetDate || isNaN(targetDate.getTime())) {
-    console.log(`❌ All date parsing failed for "${bookingDate}", using IST today`);
-    targetDate = getISTTime();
-  }
+  if (!targetDate || !targetDate.isValid) {
+  console.log(`❌ All date parsing failed for "${bookingDate}", using IST today`);
+  targetDate = getISTTime();
+}
 } else {
   console.log(`📅 No booking date provided, using IST today`);
   targetDate = getISTTime();
