@@ -55,7 +55,7 @@ async function createAndSendPaymentLink(phone, amount, bookingData) {
       },
       callback_url: `${process.env.WEBHOOK_BASE_URL}/payment-success`,
       callback_method: 'get',
-      expire_by: Math.floor(Date.now() / 1000) + 900
+      expire_by: Math.floor(Date.now() / 1000) + 1800
     };
 
     const paymentLink = await razorpay.paymentLink.create(paymentLinkData);
@@ -112,9 +112,9 @@ setTimeout(async () => {
 setTimeout(() => {
   if (global.pendingPayments[paymentLink.id]) {
     delete global.pendingPayments[paymentLink.id];
-    console.log(`🧹 Cleaned up expired payment (15 min): ${paymentLink.id}`);
+    console.log(`🧹 Cleaned up expired payment (30 min): ${paymentLink.id}`);
   }
-}, 900000); // 15 minutes
+}, 1800000); // 30 minutes
 
     return {
       success: true,
