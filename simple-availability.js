@@ -173,8 +173,8 @@ function generateSlotCandidates(durationHours, date, operatingHours) {
   
   if (isToday) {
     // CURRENT TIME BONUS - immediate start option using IST
-    const currentHour = todayIST.getHours();
-    const currentMinute = todayIST.getMinutes();
+    const currentHour = todayIST.hour;
+    const currentMinute = todayIST.minute;
     const currentTotalMinutes = currentHour * 60 + currentMinute;
     
     console.log(`🕐 Current IST time: ${currentHour}:${currentMinute} (${currentTotalMinutes} minutes)`);

@@ -95,12 +95,14 @@ if (bookingDate) {
   console.log(`📅 No booking date provided, using IST today`);
   targetDate = getISTTime();
 }
+// Always work with sheet-format string for date-utils
+const targetDateSheet = toSheetFormat(targetDate);
 
- console.log(`📅 Final target date: ${targetDate.toDateString()}`);
- 
- // Convert times to TTLock format (timestamps in milliseconds)
- const startTimestamp = convertToTimestamp(startTime, targetDate);
- const endTimestamp = convertToTimestamp(endTime, targetDate);
+console.log(`📅 Final target date (sheet format): ${targetDateSheet}`);
+
+// Convert times to TTLock format (timestamps in milliseconds)
+const startTimestamp = convertToTimestamp(startTime, targetDateSheet);
+const endTimestamp = convertToTimestamp(endTime, targetDateSheet);
  
   console.log(`🕐 Start timestamp: ${startTimestamp} (${new Date(startTimestamp)})`);
   console.log(`🕐 End timestamp: ${endTimestamp} (${new Date(endTimestamp)})`);
