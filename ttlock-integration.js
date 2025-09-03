@@ -285,6 +285,10 @@ function convertToTimestamp(timeString, date = null) {
   // TTLock API expects local timezone timestamps
   const timestamp = new Date(targetDate);
   timestamp.setHours(hours, minutes, 0, 0);
+  // ADD THIS LOGGING BACK
+  console.log(`🕐 TTLock Converting: ${timeString} on ${targetDate.toDateString()}`);
+  console.log(`🕰 Result timestamp: ${timestamp.toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'})}`);
+  
   
   console.log(`🕐 TTLock: Converting ${timeString} on ${targetDate.toDateString()} to ${timestamp.toLocaleString('en-IN')}`);
   
