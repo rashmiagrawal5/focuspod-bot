@@ -139,12 +139,24 @@ setTimeout(() => {
 // FIXED: Handle Razorpay webhook events with proper signature handling
 async function handleRazorpayWebhook(webhookBody, webhookSignature) {
   try {
-    console.log('💰 Razorpay webhook received');
-    console.log('📦 Webhook body:', JSON.stringify(webhookBody, null, 2));
+    // Compact production log
+    console.log('💰 Razorpay webhook received:', {
+      event: webhookBody.event,
+      linkId: webhookBody.payload?.payment_link?.entity?.id,
+      paymentId: webhookBody.payload?.payment?.entity?.id,
+      amount: webhookBody.payload?.payment?.entity?.amount / 100,
+      status: webhookBody.payload?.payment?.entity?.status,
+      bookingId: webhookBody.payload?.payment_link?.entity?.notes?.booking_id,
+      phone: webhookBody.payload?.payment_link?.entity?.notes?.user_phone
+    });
+
+    // Verbose logging only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📦 Full webhook body:', JSON.stringify(webhookBody, null, 2));
+    }
     
-    // FIXED: Better signature verification
+    // Signature validation
     let isSignatureValid = false;
-    
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || 'test_webhook_secret';
     
     if (webhookSignature && webhookSecret) {
@@ -154,59 +166,72 @@ async function handleRazorpayWebhook(webhookBody, webhookSignature) {
           .update(JSON.stringify(webhookBody))
           .digest('hex');
         
-        // Check if signature matches
         isSignatureValid = expectedSignature === webhookSignature;
-        
         console.log(`🔐 Signature validation: ${isSignatureValid ? 'VALID' : 'INVALID'}`);
-        
       } catch (sigError) {
         console.log('⚠️ Signature verification error:', sigError.message);
       }
     }
     
-    // FIXED: Allow processing in development mode even with invalid signature
     const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
-    
     if (!isSignatureValid && !isDevelopment) {
       console.error('❌ Invalid webhook signature in production mode');
       return { success: false, error: 'Invalid signature' };
     }
-    
     if (!isSignatureValid && isDevelopment) {
       console.log('⚠️ Invalid signature - but allowing in development mode');
     }
 
     const { event, payload } = webhookBody;
-    console.log(`📨 Webhook event: ${event}`);
-    console.log(`🔍 WEBHOOK TEST - Event Details:`, {
-      event: event,
-      payment_link_id: payload?.payment_link?.entity?.id,
-      payment_id: payload?.payment?.entity?.id,
-      amount: payload?.payment_link?.entity?.amount,
-      status: payload?.payment_link?.entity?.status
-    });
 
-    // Handle different events
-    switch (event) {
-      case 'payment_link.paid':
-        return await handlePaymentSuccess(payload);
-      
-      case 'payment_link.cancelled':
-        return await handlePaymentCancellation(payload);
-      
-      case 'payment_link.expired':
-        return await handlePaymentExpiry(payload);
-      
-      default:
-        console.log(`ℹ️ Unhandled webhook event: ${event}`);
-        return { success: true, status: 'ignored' };
+    // ✅ Handle payment success
+    if (event === "payment_link.paid") {
+      const paymentLinkId = payload?.payment_link?.entity?.id;
+      const phone = global.pendingPayments[paymentLinkId]?.phone;
+      const bookingData = global.pendingPayments[paymentLinkId]?.bookingData;
+
+      if (!paymentLinkId || !bookingData) {
+        console.log("⚠️ Payment link not found in pendingPayments");
+        return { success: false, error: "Payment not found" };
+      }
+
+      console.log(`✅ Payment confirmed for booking ${bookingData.transactionId}`);
+
+      // --- FIX: Clear pending payment so reminder/expiry won't fire ---
+      if (global.pendingPayments[paymentLinkId]) {
+        delete global.pendingPayments[paymentLinkId];
+        console.log(`🧹 Cleared pending payment after success: ${paymentLinkId}`);
+      }
+
+      await sendMessage(phone,
+        `✅ *Payment Successful!*\n\n` +
+        `🎉 Booking Confirmed Instantly!\n\n` +
+        `📍 Society: ${bookingData.societyName}\n` +
+        `🏠 Pod: ${bookingData.podName || bookingData.podId}\n` +
+        `📅 Date: ${bookingData.date}\n` +
+        `⏰ Time: ${bookingData.startTime} - ${bookingData.endTime}\n` +
+        `⏳ Duration: ${bookingData.duration} hours\n` +
+        `💰 Amount: ₹${bookingData.amount}\n` +
+        `🆔 Booking ID: ${bookingData.transactionId}`
+      );
+
+      return { success: true };
     }
 
+    if (event === "payment_link.expired") {
+      console.log("⚠️ Payment link expired event received");
+      // Don’t send expired message if already paid (entry will be cleared)
+    }
+
+    return { success: true };
+
   } catch (error) {
-    console.error('❌ Error processing webhook:', error);
+    console.error("❌ Error in handleRazorpayWebhook:", error);
     return { success: false, error: error.message };
   }
 }
+
+
 
 // ENHANCED: Handle successful payment
 async function handlePaymentSuccess(payload) {
