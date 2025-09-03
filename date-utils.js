@@ -1,102 +1,91 @@
-// date-utils.js - FIXED: Simpler IST handling
+// date-utils.js - Luxon based
+const { DateTime } = require("luxon");
 
-// Helper function to get current IST time - SIMPLIFIED
+// Always use Asia/Kolkata timezone
+const IST_ZONE = "Asia/Kolkata";
+
+// Get current IST time as a Luxon DateTime
 function getISTTime() {
-  // Much simpler: just add 5.5 hours to UTC
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
-  return new Date(now.getTime() + istOffset);
+  return DateTime.now().setZone(IST_ZONE);
 }
 
-// Convert any date to Google Sheets format: "Sep 02, 2025"
+// Convert Date/Luxon/ISO string → Google Sheets format: "Sep 04, 2025"
 function toSheetFormat(date) {
+  let dt;
   if (!date) return null;
-  
-  let dateObj;
-  if (typeof date === 'string') {
-    dateObj = new Date(date);
+
+  if (typeof date === "string") {
+    dt = DateTime.fromISO(date, { zone: IST_ZONE });
   } else if (date instanceof Date) {
-    dateObj = date;
+    dt = DateTime.fromJSDate(date, { zone: IST_ZONE });
+  } else if (date.setZone) {
+    dt = date.setZone(IST_ZONE);
   } else {
     return null;
   }
-  
-  if (isNaN(dateObj.getTime())) return null;
-  
-  const options = { 
-    year: 'numeric', 
-    month: 'short', 
-    day: '2-digit'
-  };
-  return dateObj.toLocaleDateString('en-US', options);
+
+  return dt.toFormat("MMM dd, yyyy");
 }
 
-// Convert sheet format back to Date object
+// Convert sheet format back to Luxon DateTime
 function fromSheetFormat(sheetDateString) {
   if (!sheetDateString) return null;
-  return new Date(sheetDateString);
+  return DateTime.fromFormat(sheetDateString, "MMM dd, yyyy", { zone: IST_ZONE });
 }
 
-// Simple display format for users: "2 Sep"
+// Simple display format for users: "4 Sep"
 function toDisplayFormat(date) {
+  let dt;
   if (!date) return null;
-  
-  let dateObj;
-  if (typeof date === 'string') {
-    dateObj = new Date(date);
+
+  if (typeof date === "string") {
+    dt = DateTime.fromISO(date, { zone: IST_ZONE });
   } else if (date instanceof Date) {
-    dateObj = date;
+    dt = DateTime.fromJSDate(date, { zone: IST_ZONE });
+  } else if (date.setZone) {
+    dt = date.setZone(IST_ZONE);
   } else {
     return null;
   }
-  
-  if (isNaN(dateObj.getTime())) return null;
-  
-  const options = { 
-    day: 'numeric',
-    month: 'short'
-  };
-  return dateObj.toLocaleDateString('en-US', options);
+
+  return dt.toFormat("d MMM");
 }
 
 // Get today in IST and convert to sheet format
 function getTodaySheetFormat() {
-  const todayIST = getISTTime();
-  return toSheetFormat(todayIST);
+  return getISTTime().toFormat("MMM dd, yyyy");
 }
 
-// Get tomorrow in IST and convert to sheet format  
+// Get tomorrow in IST and convert to sheet format
 function getTomorrowSheetFormat() {
-  const todayIST = getISTTime();
-  const tomorrow = new Date(todayIST);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return toSheetFormat(tomorrow);
+  return getISTTime().plus({ days: 1 }).toFormat("MMM dd, yyyy");
 }
 
 // Get day after tomorrow in IST and convert to sheet format
 function getDayAfterSheetFormat() {
-  const todayIST = getISTTime();
-  const dayAfter = new Date(todayIST);
-  dayAfter.setDate(dayAfter.getDate() + 2);
-  return toSheetFormat(dayAfter);
+  return getISTTime().plus({ days: 2 }).toFormat("MMM dd, yyyy");
 }
 
-// Convert "HH:mm" + Date object (in IST) to UTC timestamp for TTLock
-function convertToTimestamp(timeString, dateObj) {
-  if (!timeString || !dateObj) return null;
+// Convert "HH:mm" + Date (in IST sheet format) → UTC timestamp (ms) for TTLock
+function convertToTimestamp(timeString, sheetDate) {
+  if (!timeString || !sheetDate) return null;
 
-  const [hours, minutes] = timeString.split(':').map(Number);
+  const [hours, minutes] = timeString.split(":").map(Number);
+  const dtIST = DateTime.fromFormat(sheetDate, "MMM dd, yyyy", { zone: IST_ZONE })
+    .set({ hour: hours, minute: minutes, second: 0, millisecond: 0 });
 
-  // Work on a copy of the date
-  const d = new Date(dateObj);
-  d.setHours(hours, minutes || 0, 0, 0);
+  const dtUTC = dtIST.toUTC();
 
-  // Adjust IST → UTC (IST = UTC+5:30, so subtract 5.5h)
-  const utcMillis = d.getTime() - (5.5 * 60 * 60 * 1000);
+  // 🔍 Debug logs
+  console.log(`🕒 [convertToTimestamp]`);
+  console.log(`   Input date (sheet): ${sheetDate}`);
+  console.log(`   Time string: ${timeString}`);
+  console.log(`   IST DateTime: ${dtIST.toFormat("yyyy-MM-dd HH:mm ZZZZ")}`);
+  console.log(`   UTC DateTime: ${dtUTC.toFormat("yyyy-MM-dd HH:mm ZZZZ")}`);
+  console.log(`   UTC millis: ${dtUTC.toMillis()}`);
 
-  return utcMillis;
+  return dtUTC.toMillis();
 }
-
 
 module.exports = {
   toSheetFormat,
