@@ -80,7 +80,7 @@ const MESSAGES = {
   
   PAYMENT_SUPPORT_DETAILED: "🆘 *Payment Support*\n\nNeed help with payment? Here are your options:\n\n1. 🔗 *Payment Link Issues:*\n   - Try opening link in different browser\n   - Clear browser cache and try again\n\n2. 💳 *Payment Method Issues:*\n   - Try different UPI app\n   - Use debit/credit card instead\n   - Try net banking\n\n3. 📞 *Direct Support:*\n   Call us: +91-9036089111\n\nWe're here to help! 😊",
   
-  PAYMENT_STATUS_WAITING: "⏳ *Payment Status*\n\nWe're waiting for your payment confirmation.\n\nIf you've completed the payment:\n✅ You'll get automatic confirmation in 1-2 minutes\n\nIf you're having issues:\n💬 Type \"help\" for assistance\n📞 Call: +91-9036089111\n\nPayment link expires in 60 minutes.",
+  PAYMENT_STATUS_WAITING: "⏳ *Payment Status*\n\nWe're waiting for your payment confirmation.\n\nIf you've completed the payment:\n✅ You'll get automatic confirmation in 1-2 minutes\n\nIf you're having issues:\n💬 Type \"help\" for assistance\n📞 Call: +91-9036089111\n\nPayment link expires in 15 minutes.",
   
   PAYMENT_TECHNICAL_ERROR: "❌ *Technical Error*\n\nSorry, there was a technical issue creating your payment.\n\nPlease try again in a moment or contact our support team.\n\n📞 Support: +91-9036089111",
   
