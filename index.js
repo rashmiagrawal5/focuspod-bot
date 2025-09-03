@@ -167,11 +167,6 @@ app.get('/webhook', (req, res) => {
 // ==========================================
 app.post('/webhook', async (req, res) => {
   try {
-    // Only log essential webhook info
-if (req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
-  const message = req.body.entry[0].changes[0].value.messages[0];
-  logInfo(`Message from ${message.from}: ${message.text?.body || message.type}`);
-}
     
     const entry = req.body.entry?.[0];
     const changes = entry?.changes?.[0];
@@ -245,12 +240,7 @@ if (req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
       }
     }
     
-    // Handle message status updates (delivered, read, etc.)
-    const statuses = value?.statuses;
-    if (statuses) {
-      console.log('📊 Message status update:', statuses[0]);
-      // You can handle delivery receipts here if needed
-    }
+    
     
     res.sendStatus(200);
     
