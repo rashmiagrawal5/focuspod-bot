@@ -268,31 +268,11 @@ async function handleBookingLockAccess(bookingData) {
 }
 
 // Convert time string to timestamp for TTLock API using IST
-function convertToTimestamp(timeString, date = null) {
-  let targetDate;
-  
-  if (date) {
-    // Parse the date normally (don't apply IST offset here)
-    targetDate = new Date(date);
-  } else {
-    // Use current date without IST adjustment  
-    targetDate = new Date();
-  }
-  
+function convertToTimestamp(timeString, date = new Date()) {
   const [hours, minutes] = timeString.split(':').map(Number);
-  
-  // Create timestamp for the exact local time (IST)
-  // TTLock API expects local timezone timestamps
-  const timestamp = new Date(targetDate);
+  const timestamp = new Date(date);
   timestamp.setHours(hours, minutes, 0, 0);
-  // ADD THIS LOGGING BACK
-  console.log(`🕐 TTLock Converting: ${timeString} on ${targetDate.toDateString()}`);
-  console.log(`🕰 Result timestamp: ${timestamp.toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'})}`);
-  
-  
-  console.log(`🕐 TTLock: Converting ${timeString} on ${targetDate.toDateString()} to ${timestamp.toLocaleString('en-IN')}`);
-  
-  return timestamp.getTime();
+  return timestamp.getTime(); // TTLock uses milliseconds
 }
 
 // Test TTLock connection

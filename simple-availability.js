@@ -401,7 +401,8 @@ async function createBooking(bookingData) {
     try {
       // FIXED: Pass the booking date properly to TTLock
       console.log(`📅 DEBUG: Passing booking date to TTLock: ${bookingData.date}`);
-     
+      console.error(`🔥 CALLING TTLock for booking ${bookingId} with lock ${lockDeviceId}`);
+
       const lockResult = await handleBookingLockAccess({
         lockId: parseInt(lockDeviceId),
         startTime: bookingData.startTime,
