@@ -1,4 +1,4 @@
-// messages.js - Cleaned up messages without test mode notice
+// messages.js - Cleaned up messages without test mode notice,
 
 const MESSAGES = {
   // Welcome & Initial Messages
