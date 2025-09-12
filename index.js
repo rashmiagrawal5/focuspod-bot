@@ -12,7 +12,7 @@ function logInfo(message) {
   console.log(`ℹ️ ${new Date().toISOString()} - ${message}`);
 }
 
-function logError(message, error = null) {
+function logServerError(message, error = null) {
   console.error(`❌ ${new Date().toISOString()} - ${message}`);
   if (error && error.stack) {
     console.error(error.stack);
