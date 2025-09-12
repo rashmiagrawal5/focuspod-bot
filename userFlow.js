@@ -72,15 +72,7 @@ async function handleUserMessage(phone, message) {
       case USER_STATES.WAITING_FOR_NAME:
         await handleNameInput(phone, message);
         break;
-      
-      case USER_STATES.WAITING_FOR_QUESTION:
-        await handleQuestionInput(phone, message);
-        break;
-        
-      case USER_STATES.WAITING_FOR_OTHER_DATE:
-        await handleOtherDateInput(phone, message);
-        break;
-        
+              
       case USER_STATES.PAYMENT_PROCESSING:
         await handlePaymentProcessing(phone, message);
         break;
@@ -148,7 +140,7 @@ async function handleInitialMessage(phone, message, user) {
       BUTTONS.ASK_QUESTION
     ]);
     
-    userStates[phone] = USER_STATES.WAITING_FOR_ACTION;
+    userStates[phone] = { step: USER_STATES.INITIAL };
     return;
   }
   
@@ -174,7 +166,7 @@ async function handleInitialMessage(phone, message, user) {
     BUTTONS.ASK_QUESTION
   ]);
   
-  userStates[phone] = USER_STATES.WAITING_FOR_ACTION;
+  userStates[phone] = { step: USER_STATES.INITIAL };
 }
 
 // FIXED: handleNameInput function
@@ -359,7 +351,7 @@ async function handleDateChoice(phone, dateChoice) {
   try {
     if (dateChoice.includes("Other") || dateChoice.includes("Human Support")) {
       await sendMessage(phone, MESSAGES.TEAM_SUPPORT_DATE);
-      userStates[phone] = { ...userStates[phone], step: USER_STATES.WAITING_FOR_TEAM_CALL };
+      
       return;
     }
     
@@ -443,7 +435,7 @@ async function handleDurationChoice(phone, durationChoice) {
   try {
     if (durationChoice.includes("Not sure") || durationChoice.includes("team")) {
       await sendMessage(phone, MESSAGES.TEAM_SUPPORT_DURATION);
-      userStates[phone] = { ...userStates[phone], step: USER_STATES.WAITING_FOR_TEAM_CALL };
+      
       return;
     }
     
@@ -1092,7 +1084,7 @@ async function handleButtonReply(phone, buttonText) {
     if (buttonText.includes("Ask a Question") || buttonText.includes("❓")) {
       console.log(`🔍 DEBUG: Matched Ask Question`);
       await sendMessage(phone, MESSAGES.QUESTION_PROMPT);
-      userStates[phone] = USER_STATES.WAITING_FOR_QUESTION;
+      
       return;
     }
     
@@ -1193,35 +1185,9 @@ if (buttonText.includes("Try Different Date") ||
   }
 }
 
-// Handle questions
-async function handleQuestionInput(phone, question) {
-  console.log(`❓ Question from ${phone}: ${question}`);
-  
-  // Store the question (you might want to save this to a database)
-  await sendMessage(phone, MESSAGES.QUESTION_RECEIVED);
-  
-  await sendButtons(phone, MESSAGES.WHAT_WOULD_YOU_LIKE, [
-    BUTTONS.BOOK_POD,
-    BUTTONS.CALL_SUPPORT
-  ]);
-  
-  userStates[phone] = USER_STATES.WAITING_FOR_ACTION;
-}
 
-// Handle other date input
-async function handleOtherDateInput(phone, dateInput) {
-  console.log(`📅 Other date input from ${phone}: ${dateInput}`);
-  
-  // Store the custom date request
-  await sendMessage(phone, MESSAGES.CUSTOM_DATE_RECEIVED);
-  
-  await sendButtons(phone, "Quick booking options:", [
-    BUTTONS.TRY_DIFFERENT_DATE,
-    BUTTONS.WAIT_TEAM_CALL
-  ]);
-  
-  userStates[phone] = USER_STATES.WAITING_FOR_ACTION;
-}
+
+
 
 // Handle alternative choices
 async function handleAlternativeChoice(phone, choice) {
@@ -1293,11 +1259,9 @@ module.exports = {
   handleUserMessage,
   handleButtonReply,
   handleNameInput,
-  handleQuestionInput,
   handleInteractiveMessage,
   handleDateSelection,
   handleDateChoice,
-  handleOtherDateInput,
   handleDurationSelection,
   handleDurationChoice,
   handleSlotAvailability,

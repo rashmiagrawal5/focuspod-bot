@@ -6,9 +6,9 @@ const MESSAGES = {
   // ==========================================
   
   // Welcome messages for different user types
-  WELCOME_NEW_USER: "Hi! 👋 Welcome to FocusPod. Since you're booking for the first time, your first pod booking is FREE 🎉",
-  WELCOME_EXISTING_FIRST_TIME: (name) => `Hi ${name}! 👋 Welcome back to FocusPod. Since you're booking for the first time, your first pod booking is FREE 🎉`,
-  WELCOME_RETURNING_USER: (name) => `Hi ${name}! 👋 Ready to book your pod?`,
+  WELCOME_NEW_USER: "Hi! 👋 Welcome to FocusPod. Since you're booking for the first time, your first booking is FREE 🎉",
+  WELCOME_EXISTING_FIRST_TIME: (name) => `Hi ${name}! 👋 Welcome back to FocusPod. Since you're booking for the first time, your first booking is FREE 🎉`,
+  WELCOME_RETURNING_USER: (name) => `Hi ${name}! 👋 Ready to book?`,
   
   // Action selection
   WHAT_WOULD_YOU_LIKE: "What would you like to do?",
@@ -80,11 +80,11 @@ const MESSAGES = {
   
   // Free booking (first time)
   FREE_BOOKING_SUCCESS: (societyName, podId, date, timeSlot, duration, bookingId) => 
-    `🎉 *Your first pod booking is FREE!*\n\n📍 Society: ${societyName}\n🏠 Pod: ${podId}\n📅 Date: ${date}\n🕒 Time: ${timeSlot}\n⏰ Duration: ${duration} hours\n🆔 Booking ID: ${bookingId}\n\nYour pod is confirmed! 🎊`,
-  
+  `🎉 *FREE Booking Confirmed!*\n\n📍 ${societyName}\n🏠 ${podId}\n📅 ${date}\n🕒 ${timeSlot}\n⏰ ${duration} hours\n🆔 ${bookingId}`,
+
   // Paid booking summary
   PAID_BOOKING_SUMMARY: (societyName, podId, date, timeSlot, duration, price, bookingId) =>
-    `✅ *Booking Summary*\n\n📍 Society: ${societyName}\n🏠 Pod: ${podId}\n📅 Date: ${date}\n🕒 Time: ${timeSlot}\n⏰ Duration: ${duration} hours\n💰 Amount: ₹${price}\n🆔 Booking ID: ${bookingId}\n\nProceed with payment to confirm your booking.`,
+  `✅ *Booking Summary*\n\n📍 ${societyName}\n🏠 ${podId}\n📅 ${date}\n🕒 ${timeSlot}\n⏰ ${duration}hrs\n💰 ₹${price}\n🆔 ${bookingId}\n\nProceed to payment`,
   
   READY_TO_COMPLETE: "Ready to complete your booking?",
   
@@ -93,29 +93,56 @@ const MESSAGES = {
   // ==========================================
   
   // Payment link creation
-  PAYMENT_LINK_CREATING: "🔄 *Creating Your Payment Link...*\n\nPlease wait a moment while we prepare your secure payment link.",
-  
+  PAYMENT_LINK_CREATING: "🔄 Creating payment link...",
+
   // Payment link sent (SHORTENED - no variables)
-  PAYMENT_LINK_SUCCESS: "💳 *Payment Link Sent!*\n\n🔗 Click the payment link above to pay securely\n⚡ You'll get automatic confirmation within 30 seconds after payment!",
+  PAYMENT_LINK_SUCCESS: "💳 *Payment Link Sent!*\n\n🔗 Click to pay securely\n⚡ You'll get automatic confirmation within 30 seconds after payment!",
   
-  PAYMENT_LINK_FAILED: "❌ *Payment Link Creation Failed*\n\nWe couldn't create your payment link right now.\n\nPlease try again or contact support:\n📞 +919318323127",
+  PAYMENT_LINK_FAILED: "❌ Payment link failed. Try again or call: 📞 +919318323127",
   
   PAYMENT_PROCESSING: (amount) => `💳 Processing payment of ₹${amount}...\n\nPlease wait while we confirm your payment.`,
   
-  PAYMENT_STATUS_CHECK: "✅ *Thank you!*\n\nIf you've completed the payment, you should receive automatic confirmation within 1-2 minutes.\n\nIf you don't receive confirmation, please contact support:\n📞 +919318323127",
-  
-  PAYMENT_SUCCESS_AUTO: "✅ *Great!*\n\nIf your payment was successful, you should receive automatic confirmation within 1-2 minutes.\n\n🔧 Check for confirmation messages above.\n\nIf you don't receive confirmation soon, please let us know!",
+  PAYMENT_STATUS_CHECK: "✅ Payment received! Confirmation coming in 1-2 minutes.\n\nNo confirmation? Call: 📞 +919318323127",
+
+PAYMENT_SUCCESS_AUTO: "✅ Payment successful! Check messages above for confirmation.\n\nNeed help? Call: 📞 +919318323127",
   
   // Payment issues and help
-  PAYMENT_ISSUE: "❌ *Payment Issue*\n\nSorry to hear about the payment problem.\n\nDon't worry - no amount has been charged if payment failed.\n\nWould you like to:",
+  PAYMENT_ISSUE: "❌ Payment issue.\n\nNo amount is charged if payment failed.\n\nWould you like to:",
   
-  PAYMENT_HELP: "❓ *Payment Help*\n\nHaving trouble with payment? Here's what you can do:\n\n1. 🔗 Click the payment link again\n2. 💳 Try a different payment method\n3. 📞 Call us: +919318323127\n4. 💬 Send \"help\" for more support\n\nWe're here to help! 😊",
+  PAYMENT_HELP: "Need help?\n\n1. Try payment link again\n2. Use different payment method\n3. Call: +919318323127",
+
+PAYMENT_SUPPORT_DETAILED: "🆘 *Payment Help*\n\nTry:\n• Different browser\n• Different UPI app\n• Debit/Credit card\n\nCall: +919318323127",
+
+PAYMENT_STATUS_WAITING: "⏳ Waiting for payment...\n\nCompleted? Wait 1-2 mins.\nNeed help? Call: +919318323127",
+
+PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +919318323127",
+
+  // Payment reminder and status messages
+  PAYMENT_REMINDER: (amount, transactionId) => 
+    `⏰ *Payment Reminder*\n\nYour payment link will expire soon.\n\n💰 Amount: ₹${amount}\n🆔 Booking: ${transactionId}\n\nPlease complete your payment to confirm the booking.`,
   
-  PAYMENT_SUPPORT_DETAILED: "🆘 *Payment Support*\n\nNeed help with payment? Here are your options:\n\n1. 🔗 *Payment Link Issues:*\n   - Try opening link in different browser\n   - Clear browser cache and try again\n\n2. 💳 *Payment Method Issues:*\n   - Try different UPI app\n   - Use debit/credit card instead\n   - Try net banking\n\n3. 📞 *Direct Support:*\n   Call us: +919318323127\n\nWe're here to help! 😊",
+  PAYMENT_RECEIVED_MANUAL: `✅ *Payment Received!* Your booking couldn't auto-complete. Our team will confirm within 5 minutes.\n\nSupport: +919318323127`,
   
-  PAYMENT_STATUS_WAITING: "⏳ *Payment Status*\n\nWe're waiting for your payment confirmation.\n\nIf you've completed the payment:\n✅ You'll get automatic confirmation in 1-2 minutes\n\nIf you're having issues:\n💬 Type \"help\" for assistance\n📞 Call: +919318323127\n\nPayment link expires in 15 minutes.",
   
-  PAYMENT_TECHNICAL_ERROR: "❌ *Technical Error*\n\nSorry, there was a technical issue creating your payment.\n\nPlease try again in a moment or contact our support team.\n\n📞 Support: +919318323127",
+  PAYMENT_CANCELLED_MESSAGE: (bookingId, date, amount) =>
+    `❌ *Payment Cancelled*\nBooking: ${bookingId}\nDate: ${date}\nAmount: ₹${amount}`,
+  
+  PAYMENT_EXPIRED_MESSAGE: (bookingId, podName, date) =>
+    `⏰ *Payment Link Expired*\nBooking: ${bookingId}\nPod: ${podName}\nDate: ${date}`,
+  
+  PAYMENT_ERROR_RETRY: `❌ *Payment Error* – Please try again or contact support 📞 +919318323127`,
+
+  PAYMENT_BOOKING_CONFIRMED: (societyName, podName, displayDate, startTime, endTime, amount, paymentId, bookingId) =>
+    `🎉 *Payment Successful!*\n\n✅ *Booking Confirmed!*\n\n` +
+    `🏢 ${societyName}\n🏠 ${podName}\n` +
+    `📅 ${displayDate}\n🕒 ${startTime} - ${endTime}\n` +
+    `💰 ₹${amount}\n💳 Payment ID: ${paymentId}\n🆔 Booking: ${bookingId}`,
+  
+  LOCK_PIN_ACTIVE: (pin) => 
+    `🔐 *Your Access PIN: ${pin}*\n\n✅ Smart lock PIN active only during your booking slot.`,
+  
+  LOCK_PIN_DEFAULT: (pin) =>
+    `🔐 *Your Access PIN: ${pin}*\n\n✅ Pod PIN active during your booking slot.`,
   
   // ==========================================
   // 10. BOOKING COMPLETION & SUCCESS
@@ -129,8 +156,8 @@ const MESSAGES = {
   
   BOOKING_COMPLETE_THANK_YOU: "Thank you for booking with FocusPod! 🎉\n\nEnjoy your focused work session!",
   
-  BOOKING_COMPLETE_GUIDELINES: "🙌 Pod Guidelines:\n✅ For work, meetings, calls, study, music\n✅ Can carry water/coffee\n🧼 Keep it clean | ❌ No food or smoking\n🕒 Please exit after your booking time\n\n🛟 For support: WhatsApp or call us at +919318323127",
-  
+  BOOKING_COMPLETE_GUIDELINES: "🙌 Pod Guidelines:\n✅ For work, calls, study\n✅ Water/coffee allowed\n🧼 Keep clean | ❌ No food/smoking\n🕒 Exit after your booking\n\n🛟 Support: +919318323127",
+
   BOOKING_ALREADY_CONFIRMED: "🎉 *Your booking is already confirmed!*\n\nIf you need help or want to make another booking, please let us know!\n\nType \"new booking\" to start fresh or \"help\" for assistance.",
   
   BOOKING_CANCELLED: "Your booking has been cancelled. No charges applied.\n\nWould you like to try booking again?",
@@ -139,19 +166,17 @@ const MESSAGES = {
   // 11. QUESTIONS & SUPPORT
   // ==========================================
   
-  QUESTION_PROMPT: "🤖 No problem! Our team is here to help.\nPlease type your question, we'll connect you with a human shortly. 🧑‍💼",
-  QUESTION_RECEIVED: "Thank you for your question! 🙏\n\nOur team has been notified and will get back to you shortly.\n\nIn the meantime, would you like to try booking a pod?",
+  QUESTION_PROMPT: "🤖 No problem! Our team is here to help.\n\nPlease call or WhatsApp us directly:\n📞 +919318323127\n\n⏰ Available: 9 AM - 9 PM daily",
   
-  TEAM_SUPPORT_DATE: "No worries! Our team will call you shortly and assist you with finding the perfect booking date for your needs. 📞",
-  TEAM_SUPPORT_DURATION: "No worries! Our team will call you shortly and assist you with finding the perfect booking duration for your needs. 📞",
-  CUSTOM_DATE_RECEIVED: "Thank you! 🙏\n\nOur team has received your request and will contact you shortly to confirm your preferred date and time.\n\nIn the meantime, would you like to try booking for today, tomorrow, or the day after?",
-  
-  CONTACT_SUPPORT_DETAILS: "📞 *Contact Support*\n\nNeed immediate help? Here are your options:\n\n📞 *Call Us:* +919318323127\n⏰ Available: 9 AM - 9 PM daily\n\n💬 *WhatsApp Support:*\nJust type your question here, and our team will respond quickly.\n\n📧 *Email:* support@focuspod.com\n\nWe're here to help! 😊",
-  
+  TEAM_SUPPORT_DATE: "No worries! Our team will help you find the perfect booking date.\n\nPlease call or WhatsApp us:\n📞 +919318323127\n⏰ Available: 9 AM - 9 PM daily",
+  TEAM_SUPPORT_DURATION: "No worries! Our team will help you find the perfect booking duration.\n\nPlease call or WhatsApp us:\n📞 +919318323127\n⏰ Available: 9 AM - 9 PM daily",
+  CONTACT_SUPPORT_DETAILS: "📞 *Contact Support*\n\nNeed immediate help?\n\n📞 *Call or WhatsApp:* +919318323127\n⏰ Available: 9 AM - 9 PM daily\n\nWe're here to help! 😊",
+  MEDIA_REDIRECT_SUPPORT: "📷 To share images or documents, please WhatsApp them directly to our support team:\n\n📞 *WhatsApp:* +919318323127\n⏰ Available: 9 AM - 9 PM daily\n\nThey'll assist you immediately! 😊",
   // ==========================================
   // 12. ERROR MESSAGES
   // ==========================================
-  
+  ERROR_WEBHOOK_PROCESSING: "Sorry, something went wrong. Please try again.",
+
   ERROR_GENERAL: "Sorry, something went wrong. Please try again.",
   ERROR_AVAILABILITY: "Sorry, there was an error checking availability. Please try again.",
   ERROR_BOOKING_PREFERENCES: "Sorry, I couldn't find your booking preferences. Let's start the booking process again.",

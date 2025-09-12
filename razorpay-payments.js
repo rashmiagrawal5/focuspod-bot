@@ -4,6 +4,7 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { sendMessage, sendButtons } = require('./whatsapp');
 const { toSheetFormat, toDisplayFormat } = require('./date-utils');
+const { MESSAGES } = require('./messages');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -71,13 +72,7 @@ async function createAndSendPaymentLink(phone, amount, bookingData) {
     setTimeout(async () => {
       if (global.pendingPayments[paymentLink.id]) {
         try {
-          await sendMessage(phone,
-            `⏰ *Payment Reminder*\n\n` +
-            `Your payment link will expire soon.\n\n` +
-            `💰 Amount: ₹${amount}\n` +
-            `🆔 Booking: ${bookingData.transactionId}\n\n` +
-            `Please complete your payment to confirm the booking.`
-          );
+          await sendMessage(phone, MESSAGES.PAYMENT_REMINDER(amount, bookingData.transactionId));
           console.log(`⏰ Reminder sent to ${phone}`);
         } catch (err) { console.log(`⚠️ Reminder failed: ${err.message}`); }
       }
@@ -94,7 +89,7 @@ async function createAndSendPaymentLink(phone, amount, bookingData) {
     return { success: true, paymentLinkId: paymentLink.id, shortUrl: paymentLink.short_url };
   } catch (error) {
     console.error('❌ Error creating payment link:', error);
-    await sendMessage(phone, `❌ *Payment Error* – Please try again or contact support 📞 +91-9036089111`);
+    await sendMessage(phone, MESSAGES.PAYMENT_ERROR_RETRY);
     throw error;
   }
 }
@@ -206,32 +201,35 @@ async function completeBookingAfterPayment(paymentInfo) {
     const pinStatus = bookingResult.pinStatus || 'unknown';
     const displayDate = toDisplayFormat(paymentInfo.bookingDate);
 
-    await sendMessage(paymentInfo.phone,
-      `🎉 *Payment Successful!*\n\n✅ *Booking Confirmed!*\n\n` +
-      `📍 ${paymentInfo.societyName}\n🏠 ${paymentInfo.podName || paymentInfo.podId}\n` +
-      `📅 ${displayDate}\n🕒 ${paymentInfo.startTime} - ${paymentInfo.endTime}\n` +
-      `💰 ₹${paymentInfo.amount}\n💳 Payment ID: ${paymentInfo.paymentId}\n🆔 Booking: ${paymentInfo.bookingId}`
+    await sendMessage(paymentInfo.phone, 
+      MESSAGES.PAYMENT_BOOKING_CONFIRMED(
+        paymentInfo.societyName,
+        paymentInfo.podName || paymentInfo.podId,
+        displayDate,
+        paymentInfo.startTime,
+        paymentInfo.endTime,
+        paymentInfo.amount,
+        paymentInfo.paymentId,
+        paymentInfo.bookingId
+      )
     );
 
     setTimeout(async () => {
-      let msg = `🔐 *Your Access PIN: ${assignedLockPin}*\n\n`;
-      if (pinStatus === 'active') msg += `✅ Smart lock PIN active only during your booking slot.`;
-      else msg += `✅ Pod PIN active during your booking slot.`;
-      await sendMessage(paymentInfo.phone, msg);
+      if (pinStatus === 'active') {
+        await sendMessage(paymentInfo.phone, MESSAGES.LOCK_PIN_ACTIVE(assignedLockPin));
+      } else {
+        await sendMessage(paymentInfo.phone, MESSAGES.LOCK_PIN_DEFAULT(assignedLockPin));
+      }
     }, 2000);
 
     setTimeout(async () => {
-      await sendMessage(paymentInfo.phone,
-        `🙌 Pod Guidelines:\n✅ For work, calls, study\n✅ Water/coffee allowed\n🧼 Keep clean | ❌ No food/smoking\n🕒 Exit after your booking\n\n🛟 Support: +91-9036089111`
-      );
+      await sendMessage(paymentInfo.phone, MESSAGES.BOOKING_COMPLETE_GUIDELINES);
     }, 5000);
 
     console.log(`✅ Booking completed with PIN: ${assignedLockPin}`);
   } catch (err) {
     console.error('❌ Booking completion failed:', err);
-    await sendMessage(paymentInfo.phone,
-      `✅ *Payment Received!* Your booking couldn’t auto-complete. Our team will confirm within 5 minutes.\n\nSupport: +91-9036089111`
-    );
+    await sendMessage(paymentInfo.phone, MESSAGES.PAYMENT_RECEIVED_MANUAL);
   }
 }
 
@@ -244,8 +242,8 @@ async function handlePaymentCancellation(payload) {
   const notes = paymentLink.notes;
   const displayDate = toDisplayFormat(notes.booking_date);
 
-  await sendMessage(notes.user_phone,
-    `❌ *Payment Cancelled*\nBooking: ${notes.booking_id}\nDate: ${displayDate}\nAmount: ₹${paymentLink.amount / 100}`
+ await sendMessage(notes.user_phone, 
+    MESSAGES.PAYMENT_CANCELLED_MESSAGE(notes.booking_id, displayDate, paymentLink.amount / 100)
   );
 
   if (global.pendingPayments[paymentLink.id]) delete global.pendingPayments[paymentLink.id];
@@ -258,7 +256,7 @@ async function handlePaymentExpiry(payload) {
   const displayDate = toDisplayFormat(notes.booking_date);
 
   await sendMessage(notes.user_phone,
-    `⏰ *Payment Link Expired*\nBooking: ${notes.booking_id}\nPod: ${notes.pod_name || notes.pod_id}\nDate: ${displayDate}`
+    MESSAGES.PAYMENT_EXPIRED_MESSAGE(notes.booking_id, notes.pod_name || notes.pod_id, displayDate)
   );
 
   if (global.pendingPayments[paymentLink.id]) delete global.pendingPayments[paymentLink.id];

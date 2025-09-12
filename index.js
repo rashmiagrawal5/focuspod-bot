@@ -214,25 +214,10 @@ app.post('/webhook', async (req, res) => {
         }
       }
       else if (messageType === 'image' || messageType === 'document') {
-        console.log(`📷 Media message received from ${from}`);
-        
-        // Check if user has pending payment (for payment proof screenshots)
-        const pendingBooking = global.pendingBookings ? 
-          Object.values(global.pendingBookings).find(booking => booking.phone === from) : null;
-        
-        if (pendingBooking) {
-          const { sendMessage } = require('./whatsapp');
-          await sendMessage(from,
-            `📷 *Screenshot Received!*\n\n` +
-            `Thank you for sharing the payment proof.\n\n` +
-            `Booking ID: ${pendingBooking.transactionId}\n\n` +
-            `⏳ Our team is verifying your payment.\n` +
-            `You'll get confirmation within 3-5 minutes.\n\n` +
-            `📧 Access PIN will be shared once verified.`
-          );
-        } else {
-          console.log(`📷 Media message from ${from} - no pending payment`);
-        }
+        console.log(`📷 Media message received from ${from} - redirecting to support`);
+        const { sendMessage } = require('./whatsapp');
+        const { MESSAGES } = require('./messages');
+        await sendMessage(from, MESSAGES.MEDIA_REDIRECT_SUPPORT);
       }
       else {
         console.log(`❓ Unhandled message type: ${messageType}`);
@@ -254,10 +239,11 @@ app.post('/webhook', async (req, res) => {
     const value = changes?.value;
     const message = value?.messages?.[0];
     
-    if (message?.from) {
+  if (message?.from) {
       try {
         const { sendMessage } = require('./whatsapp');
-        await sendMessage(message.from, "Sorry, something went wrong. Please try again.");
+        const { MESSAGES } = require('./messages');
+        await sendMessage(message.from, MESSAGES.ERROR_WEBHOOK_PROCESSING);
       } catch (sendError) {
         console.error('❌ Failed to send error message:', sendError);
       }
@@ -413,7 +399,7 @@ app.get('/payment-success', (req, res) => {
         
         ${razorpay_payment_id ? `<div class="payment-id">Payment ID: ${razorpay_payment_id}</div>` : ''}
         
-        <a href="https://wa.me/${process.env.PHONE_NUMBER_ID?.replace('whatsapp:', '') || '919036089111'}?text=Hi, I just completed my payment. Can you share my booking details?" class="whatsapp-btn">
+        <a href="https://wa.me/${process.env.PHONE_NUMBER_ID?.replace('whatsapp:', '') || '919318323127'}?text=Hi, I just completed my payment. Can you share my booking details?" class="whatsapp-btn">
           📱 Get Booking Details on WhatsApp
         </a>
       </div>
@@ -500,7 +486,7 @@ app.get('/payment-failure', (req, res) => {
           </p>
         ` : ''}
         
-        <a href="https://wa.me/${process.env.PHONE_NUMBER_ID?.replace('whatsapp:', '') || '919036089111'}?text=Hi, I had a payment issue. Can you help me book a pod?" class="whatsapp-btn">
+        <a href="https://wa.me/${process.env.PHONE_NUMBER_ID?.replace('whatsapp:', '') || '919318323127'}?text=Hi, I had a payment issue. Can you help me book a pod?" class="whatsapp-btn">
           📱 Get Help on WhatsApp
         </a>
       </div>
