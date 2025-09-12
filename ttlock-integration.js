@@ -51,6 +51,7 @@ async function makeTTLockRequest(endpoint, data = {}, retries = 2) {
         return { success: true, data: response.data, region: apiBase };
       } else {
         console.log(`⚠️ TTLock API Error from ${apiBase}:`, response.data.errmsg);
+        
         // Try next region if available
         continue;
       }
@@ -60,11 +61,9 @@ async function makeTTLockRequest(endpoint, data = {}, retries = 2) {
       continue;
     }
   }
-if (!result.success) {
-  // Log the error
-  await logError('TTLock', '', `All regions failed for endpoint: ${endpoint}`);
-}
+
   // All regions failed
+   logError('TTLock', '', `All regions failed for endpoint: ${endpoint}`);
   return { 
     success: false, 
     error: 'All TTLock API regions failed',
@@ -140,7 +139,7 @@ const endTimestamp = convertToTimestamp(endTime, targetDateSheet);
   }
 
   console.error(`❌ Failed to generate PIN for ${bookingId}:`, result.error);
-  await logError('TTLock', phone || '', `PIN generation failed: ${result.error}`);
+  logError('TTLock', '', `PIN generation failed for ${bookingId}: ${result.error}`);
   return {
     success: false,
     error: result.error || 'Failed to generate random PIN'
@@ -258,7 +257,7 @@ async function handleBookingLockAccess(bookingData) {
 
   } catch (error) {
     console.error(`❌ Error handling booking lock access:`, error);
-    await logError('TTLock', bookingData.phone || '', `Lock access failed: ${error.message}`);
+    logError('TTLock', '', `Lock access failed: ${error.message}`);
     
     // Final fallback - try to get default PIN
     const defaultPIN = await getDefaultPIN(lockId);
