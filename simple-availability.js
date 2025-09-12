@@ -447,7 +447,11 @@ async function createBooking(bookingData) {
       createdAt,                    // CreatedAt
       assignedLockPin,              // AssignedLockPin
       keyboardPwdId || '',          // KeyboardPwdId
-      pinStatus                     // PINStatus
+      pinStatus,                     // PINStatus
+      bookingData.paymentId || '',  // PaymentId (NEW)
+      bookingData.paymentStatus || (bookingData.amount > 0 ? 'Pending' : 'N/A'), // PaymentStatus (NEW)
+      bookingData.paymentMethod || (bookingData.amount > 0 ? 'Online' : 'Free'), // PaymentMethod (NEW)
+      createdAt                     // UpdatedAt (NEW)
     ];
     
     await sheets.spreadsheets.values.append({
@@ -475,6 +479,7 @@ async function createBooking(bookingData) {
     
   } catch (error) {
     console.error('❌ Error creating booking:', error);
+    await logError('System', bookingData.phone || '', `Booking creation failed: ${error.message}`);
     
     // Return fallback result with default PIN
     return {

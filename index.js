@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const { logSupportRequest, logError } = require('./sheets');
 require('dotenv').config();
 
 // ==========================================
@@ -218,6 +219,8 @@ app.post('/webhook', async (req, res) => {
         const { sendMessage } = require('./whatsapp');
         const { MESSAGES } = require('./messages');
         await sendMessage(from, MESSAGES.MEDIA_REDIRECT_SUPPORT);
+        await logSupportRequest(from, 'Media', 'User sent media file');
+
       }
       else {
         console.log(`❓ Unhandled message type: ${messageType}`);
@@ -232,6 +235,8 @@ app.post('/webhook', async (req, res) => {
   } catch (error) {
     console.error('❌ Error processing webhook:', error);
     console.error('Stack trace:', error.stack);
+    await logError('Webhook', message?.from || 'unknown', error.message);
+
     
     // Send error message to help debug
     const entry = req.body.entry?.[0];

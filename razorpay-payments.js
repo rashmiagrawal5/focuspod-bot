@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const { sendMessage, sendButtons } = require('./whatsapp');
 const { toSheetFormat, toDisplayFormat } = require('./date-utils');
 const { MESSAGES } = require('./messages');
+const { logError } = require('./sheets');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -89,6 +90,8 @@ async function createAndSendPaymentLink(phone, amount, bookingData) {
     return { success: true, paymentLinkId: paymentLink.id, shortUrl: paymentLink.short_url };
   } catch (error) {
     console.error('❌ Error creating payment link:', error);
+      await logError('Payment', phone, `Payment link creation failed: ${error.message}`);
+
     await sendMessage(phone, MESSAGES.PAYMENT_ERROR_RETRY);
     throw error;
   }
@@ -137,6 +140,7 @@ async function handleRazorpayWebhook(webhookBody, webhookSignature) {
     return { success: true };
   } catch (err) {
     console.error("❌ Webhook error:", err);
+    await logError('Payment', '', `Webhook processing failed: ${err.message}`);
     return { success: false, error: err.message };
   }
 }
@@ -194,7 +198,10 @@ async function completeBookingAfterPayment(paymentInfo) {
       duration: paymentInfo.duration,
       userId: paymentInfo.userId,
       amount: paymentInfo.amount,
-      bookingType: 'Regular'
+      bookingType: 'Regular',
+      paymentId: paymentInfo.paymentId,
+      paymentStatus: 'Completed',
+      paymentMethod: paymentInfo.paymentMethod || 'Online'
     });
 
     const assignedLockPin = bookingResult.assignedLockPin || '1234';

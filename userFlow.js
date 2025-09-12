@@ -9,7 +9,9 @@ const {
   generateTransactionId,
   generateLockPin,
   getPricing,              // NEW: Dynamic pricing
-  getPriceForDuration      // NEW: Dynamic pricing
+  getPriceForDuration,      // NEW: Dynamic pricing
+  logSupportRequest,
+  logError
 } = require("./sheets");
 
 // Import the simple availability system
@@ -351,7 +353,7 @@ async function handleDateChoice(phone, dateChoice) {
   try {
     if (dateChoice.includes("Other") || dateChoice.includes("Human Support")) {
       await sendMessage(phone, MESSAGES.TEAM_SUPPORT_DATE);
-      
+      await logSupportRequest(phone, 'CustomDate', 'User needs custom date');
       return;
     }
     
@@ -435,7 +437,7 @@ async function handleDurationChoice(phone, durationChoice) {
   try {
     if (durationChoice.includes("Not sure") || durationChoice.includes("team")) {
       await sendMessage(phone, MESSAGES.TEAM_SUPPORT_DURATION);
-      
+      await logSupportRequest(phone, 'CustomDuration', 'User needs help with duration');
       return;
     }
     
@@ -1084,7 +1086,7 @@ async function handleButtonReply(phone, buttonText) {
     if (buttonText.includes("Ask a Question") || buttonText.includes("❓")) {
       console.log(`🔍 DEBUG: Matched Ask Question`);
       await sendMessage(phone, MESSAGES.QUESTION_PROMPT);
-      
+      await logSupportRequest(phone, 'Question', buttonText);
       return;
     }
     

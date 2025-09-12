@@ -389,6 +389,86 @@ function generateLockPin(phone) {
   return phone.substring(phone.length - 4); // Last 4 digits
 }
 
+
+// Log support request to Support_Requests sheet
+async function logSupportRequest(phone, requestType, message = '', userName = '') {
+  try {
+    const sheets = await getSheetClient();
+    const SUPPORT_SHEET = 'Support_Requests';
+    
+    const requestId = `SUP${Date.now()}`;
+    const timestamp = new Date().toISOString();
+    
+    // Get user info if not provided
+    if (!userName) {
+      const user = await getUserByPhone(phone);
+      userName = user?.Name || 'Unknown';
+    }
+    
+    const user = await getUserByPhone(phone);
+    const societyId = user?.SocietyId || '';
+    
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SUPPORT_SHEET}!A2`,
+      valueInputOption: 'USER_ENTERED',
+      resource: {
+        values: [[
+          requestId,
+          phone,
+          requestType,
+          message.substring(0, 500), // Limit message length
+          timestamp,
+          userName,
+          societyId,
+          'Pending'
+        ]],
+      },
+    });
+    
+    console.log(`📝 Support request logged: ${requestType} from ${phone}`);
+    return requestId;
+    
+  } catch (error) {
+    console.error('❌ Error logging support request:', error);
+    return null;
+  }
+}
+
+// Log errors to Error_Logs sheet
+async function logError(errorType, phone = '', errorMessage = '') {
+  try {
+    const sheets = await getSheetClient();
+    const ERROR_LOG_SHEET = 'Error_Logs';
+    
+    const logId = `ERR${Date.now()}`;
+    const timestamp = new Date().toISOString();
+    
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${ERROR_LOG_SHEET}!A2`,
+      valueInputOption: 'USER_ENTERED',
+      resource: {
+        values: [[
+          logId,
+          errorType,
+          phone,
+          errorMessage.substring(0, 500), // Limit message length
+          timestamp,
+          'No'
+        ]],
+      },
+    });
+    
+    console.log(`🚨 Error logged: ${errorType} - ${errorMessage.substring(0, 50)}`);
+    return logId;
+    
+  } catch (error) {
+    console.error('❌ Error logging to Error_Logs:', error);
+    return null;
+  }
+}
+
 module.exports = {
   getUserByPhone,
   addNewUser,
@@ -401,5 +481,7 @@ module.exports = {
   generateLockPin,
   getPricing,              // NEW: Export pricing functions
   getPriceForDuration,     // NEW: Export pricing functions
-  getLockIdForPod          // NEW: Export lock ID lookup
+  getLockIdForPod,          // NEW: Export lock ID lookup
+  logSupportRequest,
+  logError
 };

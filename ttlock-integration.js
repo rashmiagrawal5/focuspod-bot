@@ -4,6 +4,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 const { DateTime } = require("luxon");
+const { logError } = require('./sheets');
 
 // Import date utilities for consistency
 const { toSheetFormat, fromSheetFormat, getISTTime, convertToTimestamp } = require('./date-utils');
@@ -59,7 +60,10 @@ async function makeTTLockRequest(endpoint, data = {}, retries = 2) {
       continue;
     }
   }
-
+if (!result.success) {
+  // Log the error
+  await logError('TTLock', '', `All regions failed for endpoint: ${endpoint}`);
+}
   // All regions failed
   return { 
     success: false, 
@@ -136,6 +140,7 @@ const endTimestamp = convertToTimestamp(endTime, targetDateSheet);
   }
 
   console.error(`❌ Failed to generate PIN for ${bookingId}:`, result.error);
+  await logError('TTLock', phone || '', `PIN generation failed: ${result.error}`);
   return {
     success: false,
     error: result.error || 'Failed to generate random PIN'
@@ -253,6 +258,7 @@ async function handleBookingLockAccess(bookingData) {
 
   } catch (error) {
     console.error(`❌ Error handling booking lock access:`, error);
+    await logError('TTLock', bookingData.phone || '', `Lock access failed: ${error.message}`);
     
     // Final fallback - try to get default PIN
     const defaultPIN = await getDefaultPIN(lockId);
