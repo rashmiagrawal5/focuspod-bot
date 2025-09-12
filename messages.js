@@ -7,6 +7,8 @@ const MESSAGES = {
   
   // Welcome messages for different user types
   WELCOME_NEW_USER: "Hi! 👋 Welcome to FocusPod. Since you're booking for the first time, your first booking is FREE 🎉",
+
+  FIRST_BOOKING_2HR_FREE: "Your first booking is FREE for 2 hours! Longer durations are paid.",
   WELCOME_EXISTING_FIRST_TIME: (name) => `Hi ${name}! 👋 Welcome back to FocusPod. Since you're booking for the first time, your first booking is FREE 🎉`,
   WELCOME_RETURNING_USER: (name) => `Hi ${name}! 👋 Ready to book?`,
   

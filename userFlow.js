@@ -107,8 +107,13 @@ async function handleUserMessage(phone, message) {
         break;
         
       default:
-        await handleInitialMessage(phone, message, user);
-        break;
+        // Only trigger greeting if message is real text
+        if (message && message.trim().length > 0) {
+          await handleInitialMessage(phone, message, user);
+        } else {
+          console.log(`⚠️ Ignored empty/system message from ${phone}`);
+        }
+  break;
     }
     
   } catch (error) {
@@ -398,7 +403,15 @@ async function handleDurationSelection(phone) {
   console.log(`⏰ Starting duration selection for ${phone}`);
   
   try {
-    await sendMessage(phone, MESSAGES.SELECT_DURATION);
+    // Check if this is user's first booking
+    const user = await getUserByPhone(phone);
+    const isFirstBooking = user && user.FirstBookingDone === 'No';
+    
+    if (isFirstBooking) {
+      await sendMessage(phone, "⏰ *Choose your booking duration:*\n\n" + MESSAGES.FIRST_BOOKING_2HR_FREE);
+    } else {
+      await sendMessage(phone, MESSAGES.SELECT_DURATION);
+    }
     
     // NEW: Get dynamic pricing from Google Sheets
     const pricing = await getPricing();
@@ -407,13 +420,25 @@ async function handleDurationSelection(phone) {
     // Create duration buttons with dynamic pricing
     const durationButtons = [];
     
-    if (pricing[2]) durationButtons.push(MESSAGES.DURATION_BUTTON(2, pricing[2]));
-    if (pricing[4]) durationButtons.push(MESSAGES.DURATION_BUTTON(4, pricing[4]));
-    if (pricing[8]) durationButtons.push(MESSAGES.DURATION_BUTTON(8, pricing[8]));
-    
-    // Fallback if pricing fails
+    // Special handling for first booking - only 2hr is free
+    if (isFirstBooking) {
+      if (pricing[2]) durationButtons.push(`2hr – FREE 🎉`);
+      if (pricing[4]) durationButtons.push(MESSAGES.DURATION_BUTTON(4, pricing[4]));
+      if (pricing[8]) durationButtons.push(MESSAGES.DURATION_BUTTON(8, pricing[8]));
+    } else {
+      // Regular pricing for returning users
+      if (pricing[2]) durationButtons.push(MESSAGES.DURATION_BUTTON(2, pricing[2]));
+      if (pricing[4]) durationButtons.push(MESSAGES.DURATION_BUTTON(4, pricing[4]));
+      if (pricing[8]) durationButtons.push(MESSAGES.DURATION_BUTTON(8, pricing[8]));
+    }
+
+    //Fallback if pricing fails
     if (durationButtons.length === 0) {
-      durationButtons.push("2hr – ₹199", "4hr – ₹349", "8hr – ₹599");
+      if (isFirstBooking) {
+        durationButtons.push("2hr – FREE 🎉", "4hr – ₹349", "8hr – ₹599");
+      } else {
+        durationButtons.push("2hr – ₹199", "4hr – ₹349", "8hr – ₹599");
+      }
       await sendMessage(phone, MESSAGES.ERROR_PRICING_LOAD);
     }
     
@@ -443,11 +468,16 @@ async function handleDurationChoice(phone, durationChoice) {
     
     let selectedDuration;
     let price;
+    // Check if user selected FREE 2hr option
+    const user = await getUserByPhone(phone);
+    const isFirstBooking = user && user.FirstBookingDone === 'No';
+    const isFree2Hr = isFirstBooking && durationChoice.includes("FREE") && durationChoice.includes("2hr");
+
     
-    // Extract duration from button text (works with dynamic pricing)
+    // Extract duration from button text
     if (durationChoice.includes("2hr")) {
       selectedDuration = 2;
-      price = await getPriceForDuration(2);
+      price = isFree2Hr ? 0 : await getPriceForDuration(2);
     } else if (durationChoice.includes("4hr")) {
       selectedDuration = 4;
       price = await getPriceForDuration(4);
@@ -456,19 +486,25 @@ async function handleDurationChoice(phone, durationChoice) {
       price = await getPriceForDuration(8);
     }
     
-    if (selectedDuration && price) {
-      // Store duration in user state with better persistence
+    if (selectedDuration) {
+      // Store duration in user state
       userStates[phone] = { 
         ...userStates[phone], 
         selectedDuration: selectedDuration,
         selectedPrice: price,
+        isFreeBooking: isFree2Hr, // Track if this is the free 2hr booking
         step: 'duration_selected',
         timestamp: Date.now()
       };
       
       console.log(`⏰ Stored duration state for ${phone}:`, userStates[phone]);
       
-      await sendMessage(phone, MESSAGES.DURATION_SELECTED(selectedDuration, price));
+      // Show appropriate message
+      if (isFree2Hr) {
+        await sendMessage(phone, `Perfect! You've selected 2 hours FREE booking! 🎉\n\nNow let me find available slots for you...`);
+      } else {
+        await sendMessage(phone, MESSAGES.DURATION_SELECTED(selectedDuration, price));
+      }
       
       // Continue to slot availability checking
       await handleSlotAvailability(phone);
@@ -679,7 +715,7 @@ async function handleSlotChoice(phone, slotChoice) {
     
     const selectedTimeSlot = timeSlotMatch[0];
     const userState = userStates[phone] || {};
-    const { availableSlots, selectedDuration, selectedPrice, selectedDate } = userState;
+    const { availableSlots, selectedDuration, selectedPrice, selectedDate, isFreeBooking } = userState;
     
     console.log(`🔍 DEBUG: Available slots count:`, availableSlots?.length || 0);
     console.log(`🔍 DEBUG: Looking for slot:`, selectedTimeSlot);
@@ -694,7 +730,6 @@ async function handleSlotChoice(phone, slotChoice) {
     }
     
     console.log(`✅ DEBUG: Found slot`, selectedSlot);
-
     
     // Store selected slot
     userStates[phone] = {
@@ -711,9 +746,12 @@ async function handleSlotChoice(phone, slotChoice) {
     const userSociety = societies.find(s => s.id === user.SocietyId);
     const societyName = userSociety ? userSociety.name : user.SocietyId;
     
-    const isFirstBooking = user.FirstBookingDone === 'No';
-    // FIXED: Use selectedDate directly (already in sheet format)
+    // Check if this is a FREE 2-hour first booking
+    const isFirstBooking = user && user.FirstBookingDone === 'No';
+    const isFree2Hr = isFirstBooking && selectedDuration === 2 && isFreeBooking === true;
+    
     console.log(`📅 DEBUG: Using selectedDate: ${selectedDate} (should be in sheet format)`);
+    console.log(`🎯 Processing: First booking = ${isFirstBooking}, Free 2hr = ${isFree2Hr}`);
 
     // 🎯 ASSIGN A SPECIFIC POD FOR THIS SLOT - use selectedDate directly
     const assignedPod = await assignPodForSlot(societyName, selectedSlot, selectedDate);
@@ -728,20 +766,16 @@ async function handleSlotChoice(phone, slotChoice) {
 
     // Update selectedSlot with the assigned pod
     selectedSlot.podId = assignedPod.podId;
-    selectedSlot.podName = assignedPod.podName; 
-
+    selectedSlot.podName = assignedPod.podName;
     
-    console.log(`🎯 Processing booking: First booking = ${isFirstBooking}`);
-    
-    // Show booking confirmation
-    if (isFirstBooking) {
-      // Create booking using new system
+    // Process booking based on whether it's free or paid
+    if (isFree2Hr) {
+      // FREE 2-HOUR FIRST BOOKING
       const transactionId = generateTransactionId();
       let lockPin = generateLockPin(user.PhoneNumber);
       
-      console.log(`🆓 Creating FREE booking: ${transactionId}`);
+      console.log(`🆓 Creating FREE 2hr first booking: ${transactionId}`);
       console.log(`📅 DEBUG: selectedDate for booking: ${selectedDate}`);
-      
       
       // Create booking in new structure
       try {
@@ -754,11 +788,11 @@ async function handleSlotChoice(phone, slotChoice) {
           endTime: selectedSlot.endTime,
           duration: selectedDuration,
           userId: user.UserId,
-          amount: 0, // Free for first booking
+          amount: 0, // Free for 2hr first booking
           bookingType: 'First_Free'
         });
         
-        console.log('✅ ENHANCED: Booking created in new structure');
+        console.log('✅ ENHANCED: Free booking created');
         console.log('📦 Booking result:', bookingResult);
 
         // Get the TTLock-generated PIN from booking result
@@ -766,22 +800,19 @@ async function handleSlotChoice(phone, slotChoice) {
         const pinStatus = bookingResult.pinStatus || 'unknown';
   
         console.log(`🔐 Final PIN to send to user: ${finalLockPin} (Status: ${pinStatus})`);
-       // Update lockPin for use outside try block
-       lockPin = finalLockPin;
-  
-  
+        lockPin = finalLockPin;
+        
       } catch (error) {
-        console.error('❌ Error creating booking in new structure:', error);
+        console.error('❌ Error creating booking:', error);
         console.error('❌ Full error details:', error.stack);
-        // Continue with old PIN as fallback
-  console.log('🔄 Continuing with fallback PIN:', lockPin);
+        console.log('🔄 Continuing with fallback PIN:', lockPin);
       }
       
       // Update Users sheet - mark first booking as done
       try {
         await updateFirstBookingStatus(
           user.PhoneNumber, 
-          toDisplayFormat(selectedDate),  // Convert for display
+          toDisplayFormat(selectedDate),
           selectedDuration
         );
         console.log('✅ Updated Users sheet with first booking');
@@ -793,7 +824,7 @@ async function handleSlotChoice(phone, slotChoice) {
       await sendMessage(phone, MESSAGES.FREE_BOOKING_SUCCESS(
         societyName,
         selectedSlot.podName,
-        toDisplayFormat(selectedDate),  // Display format for user
+        toDisplayFormat(selectedDate),
         selectedTimeSlot,
         selectedDuration,
         transactionId
@@ -804,17 +835,18 @@ async function handleSlotChoice(phone, slotChoice) {
       // Send guidelines and complete booking
       setTimeout(async () => {
         await sendMessage(phone, MESSAGES.BOOKING_COMPLETE_GUIDELINES);
-        // Set state to completed to prevent "Hi again"
         userStates[phone] = { ...userStates[phone], step: USER_STATES.BOOKING_COMPLETED };
       }, 2000);
       
     } else {
-      // Generate booking data for paid booking
+      // PAID BOOKING (returning user OR first booking >2hrs)
       const transactionId = generateTransactionId();
       const lockPin = generateLockPin(user.PhoneNumber);
       
+      // Determine the actual price (first booking >2hrs still needs payment)
+      const bookingAmount = selectedPrice || (await getPriceForDuration(selectedDuration));
       
-      console.log(`💳 Creating PAID booking: ${transactionId} for ₹${selectedPrice}`);
+      console.log(`💳 Creating PAID booking: ${transactionId} for ₹${bookingAmount}`);
       console.log(`📅 DEBUG: selectedDate = ${selectedDate}`);
       
       // Store booking data in user state for payment processing
@@ -830,12 +862,13 @@ async function handleSlotChoice(phone, slotChoice) {
           endTime: selectedSlot.endTime,
           duration: selectedDuration,
           userId: user.UserId,
-          amount: selectedPrice,
+          amount: bookingAmount,
           bookingType: 'Regular',
           assignedLockPin: lockPin,
           selectedSlot: selectedSlot,
           societyName: societyName,
-          bookingDate: toDisplayFormat(selectedDate)  // Display format for user messages
+          bookingDate: toDisplayFormat(selectedDate),
+          isFirstBookingPaid: isFirstBooking && selectedDuration > 2  // Track if this is first booking but paid
         },
         step: USER_STATES.PENDING_PAYMENT
       };
@@ -843,10 +876,10 @@ async function handleSlotChoice(phone, slotChoice) {
       await sendMessage(phone, MESSAGES.PAID_BOOKING_SUMMARY(
         societyName,
         selectedSlot.podName,
-        toDisplayFormat(selectedDate),  // Display format for user
+        toDisplayFormat(selectedDate),
         selectedTimeSlot,
         selectedDuration,
-        selectedPrice,
+        bookingAmount,
         transactionId
       ));
       
