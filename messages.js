@@ -119,7 +119,7 @@ PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +91931832
 
   // Payment reminder and status messages
   PAYMENT_REMINDER: (amount, transactionId) => 
-    `⏰ *Payment Reminder*\n\nYour payment link will expire soon.\n\n💰 Amount: ₹${amount}\n🆔 Booking: ${transactionId}\n\nPlease complete your payment to confirm the booking.`,
+    `⏰ *Payment link will expire soon*\n\n💰 ₹${amount}\n🆔 ${transactionId}`,
   
   PAYMENT_RECEIVED_MANUAL: `✅ *Payment Received!* Your booking couldn't auto-complete. Our team will confirm within 5 minutes.\n\nSupport: +919318323127`,
   
