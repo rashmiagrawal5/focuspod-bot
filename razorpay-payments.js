@@ -60,12 +60,10 @@ async function createAndSendPaymentLink(phone, amount, bookingData) {
       `📍 Society: ${bookingData.societyName}\n` +
       `🏠 Pod: ${bookingData.podName || bookingData.podId}\n` +
       `⏰ Time: ${bookingData.startTime} - ${bookingData.endTime}\n` +
-      `💰 Amount: ₹${amount}\n` +
-      `🆔 Booking: ${bookingData.transactionId}\n\n` +
+      `💰 Amount: ₹${amount}\n\n` +
       `🔗 *Click to pay securely:*\n${paymentLink.short_url}\n\n` +
       `✅ UPI • Cards • Net Banking • Wallets\n` +
-      `⚡ Instant Confirmation - No Screenshots Needed!\n` +
-      `⏰ Link expires in 30 minutes`;
+      `⚡ Instant Confirmation`;
 
     await sendMessage(phone, msg);
 

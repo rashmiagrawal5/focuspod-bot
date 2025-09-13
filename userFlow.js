@@ -959,11 +959,9 @@ async function handlePaymentChoice(phone, choice) {
           
           // Simple success message - webhook will handle the rest
           await sendMessage(phone, 
-            `💳 *Payment Link Sent!*\n\n` +
+            `💳 *Payment Link Sent!*\n` +
             `Amount: ₹${pendingBooking.amount}\n` +
-            `Booking: ${pendingBooking.transactionId}\n\n` +
-            `🔗 Click the payment link above to pay securely\n` +
-            `✅ You'll get automatic confirmation within 30 seconds after payment!`
+            `🔗 Click the payment link above to pay securely\n`
           );
           
         } else {

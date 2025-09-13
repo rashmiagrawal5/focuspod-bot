@@ -33,10 +33,10 @@ const MESSAGES = {
   // 4. SOCIETY SELECTION
   // ==========================================
   
-  SOCIETY_DETECTED: (societyName) => `Perfect! I've detected you're from ${societyName}. Let's continue with your booking! 🎉`,
-  SOCIETY_AUTO_ASSIGNED: (societyName) => `Great! I've set your society as ${societyName}. Let's continue with your booking! 🎉`,
-  SOCIETY_ALREADY_SET: (societyName) => `Great! I see you're from ${societyName}. Let's continue with your booking.`,
-  SOCIETY_SELECTED: (societyName) => `Perfect! You've selected ${societyName}. Let's continue with your booking! 🎉`,
+  SOCIETY_DETECTED: (societyName) => `Perfect! I've detected you're from ${societyName}. 🎉`,
+  SOCIETY_AUTO_ASSIGNED: (societyName) => `Great! I've set your society as ${societyName}. 🎉`,
+  SOCIETY_ALREADY_SET: (societyName) => `Great! I see you're from ${societyName}.`,
+  SOCIETY_SELECTED: (societyName) => `Perfect! You've selected ${societyName}. 🎉`,
   
   SELECT_SOCIETY: "🏘️ *Please select your residential society:*",
   SOCIETY_CHOOSE_PROMPT: "Choose the one you belong to:",
@@ -49,7 +49,7 @@ const MESSAGES = {
   SELECT_DATE: "📅 *Select your preferred day:*",
   DATE_CHOOSE_PROMPT: "Choose the day you'd like to book:",
   DATE_OTHER_OPTION: "Or if you need a different date:",
-  DATE_SELECTED: (date) => `Great! You've selected ${date}. 📅\n\nNow let's choose your booking duration.`,
+  DATE_SELECTED: (date) => `Great! You've selected ${date}. 📅\nNow let's choose your booking duration.`,
   
   // ==========================================
   // 6. DURATION SELECTION
@@ -58,7 +58,7 @@ const MESSAGES = {
   SELECT_DURATION: "⏰ *Choose your booking duration:*",
   DURATION_CHOOSE_PROMPT: "Select the duration that works for you:",
   DURATION_HELP_PROMPT: "Need help deciding?",
-  DURATION_SELECTED: (duration, price) => `Perfect! You've selected ${duration} hours for ₹${price}. ⏰\n\nNow let me find available slots for you...`,
+  DURATION_SELECTED: (duration, price) => `Perfect! You've selected ${duration} hours for ₹${price}. ⏰\nNow let me find available slots for you...`,
   
   // Dynamic duration button creation
   DURATION_BUTTON: (hours, price) => `${hours}hr — ₹${price}`,
@@ -82,11 +82,11 @@ const MESSAGES = {
   
   // Free booking (first time)
   FREE_BOOKING_SUCCESS: (societyName, podId, date, timeSlot, duration, bookingId) => 
-  `🎉 *FREE Booking Confirmed!*\n\n📍 ${societyName}\n🏠 ${podId}\n📅 ${date}\n🕒 ${timeSlot}\n⏰ ${duration} hours\n🆔 ${bookingId}`,
+  `🎉 *FREE Booking Confirmed!*\n\n📍 ${societyName}\n🏠 ${podId}\n📅 ${date}\n🕒 ${timeSlot}\n⏰ ${duration} hours`,
 
   // Paid booking summary
   PAID_BOOKING_SUMMARY: (societyName, podId, date, timeSlot, duration, price, bookingId) =>
-  `✅ *Booking Summary*\n\n📍 ${societyName}\n🏠 ${podId}\n📅 ${date}\n🕒 ${timeSlot}\n⏰ ${duration}hrs\n💰 ₹${price}\n🆔 ${bookingId}\n\nProceed to payment`,
+  `✅ *Booking Summary*\n\n📍 ${societyName}\n🏠 ${podId}\n📅 ${date}\n🕒 ${timeSlot}\n⏰ ${duration}hrs\n💰 ₹${price}`,
   
   READY_TO_COMPLETE: "Ready to complete your booking?",
   
@@ -121,7 +121,7 @@ PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +91931832
 
   // Payment reminder and status messages
   PAYMENT_REMINDER: (amount, transactionId) => 
-    `⏰ *Payment link will expire soon*\n\n💰 ₹${amount}\n🆔 ${transactionId}`,
+    `⏰ *Payment link will expire soon*\n`,
   
   PAYMENT_RECEIVED_MANUAL: `✅ *Payment Received!* Your booking couldn't auto-complete. Our team will confirm within 5 minutes.\n\nSupport: +919318323127`,
   
@@ -135,13 +135,13 @@ PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +91931832
   PAYMENT_ERROR_RETRY: `❌ *Payment Error* – Please try again or contact support 📞 +919318323127`,
 
   PAYMENT_BOOKING_CONFIRMED: (societyName, podName, displayDate, startTime, endTime, amount, paymentId, bookingId) =>
-    `🎉 *Payment Successful!*\n\n✅ *Booking Confirmed!*\n\n` +
+    `✅ *Booking Confirmed!*\n\n` +
     `🏢 ${societyName}\n🏠 ${podName}\n` +
     `📅 ${displayDate}\n🕒 ${startTime} - ${endTime}\n` +
-    `💰 ₹${amount}\n💳 Payment ID: ${paymentId}\n🆔 Booking: ${bookingId}`,
+    `💰 ₹${amount}\n🆔 Booking: ${bookingId}`,
   
   LOCK_PIN_ACTIVE: (pin) => 
-    `🔐 *Your Access PIN: ${pin}*\n\n✅ Smart lock PIN active only during your booking slot.`,
+    `🔐 *Your Access PIN: ${pin}*\n\nYou can enter and exit multiple times during your booking slot using this PIN.`,
   
   LOCK_PIN_DEFAULT: (pin) =>
     `🔐 *Your Access PIN: ${pin}*\n\n✅ Pod PIN active during your booking slot.`,
@@ -158,7 +158,7 @@ PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +91931832
   
   BOOKING_COMPLETE_THANK_YOU: "Thank you for booking with FocusPod! 🎉\n\nEnjoy your focused work session!",
   
-  BOOKING_COMPLETE_GUIDELINES: "🙌 Pod Guidelines:\n✅ For work, calls, study\n✅ Water/coffee allowed\n🧼 Keep clean | ❌ No food/smoking\n🕒 Exit after your booking\n\n🛟 Support: +919318323127",
+  BOOKING_COMPLETE_GUIDELINES: "🙌 Pod Guidelines:\n✅ For work, calls, study\n✅ Water/coffee allowed\n🧼 Keep clean | ❌ No food\n🕒 Exit after your booking\n\n🛟 Support: Call +919318323127",
 
   BOOKING_ALREADY_CONFIRMED: "🎉 *Your booking is already confirmed!*\n\nIf you need help or want to make another booking, please let us know!\n\nType \"new booking\" to start fresh or \"help\" for assistance.",
   
@@ -212,9 +212,9 @@ const BUTTONS = {
   CALL_SUPPORT: "📞 Call Support",
   
   // Date Options
-  OTHER_HUMAN_SUPPORT: "Other → Human Support",
-  TRY_DIFFERENT_DATE: "📅 Try Different Date",
-  TRY_DIFFERENT_DURATION: "⏰ Try Different Duration",
+  OTHER_HUMAN_SUPPORT: "Other → Support",
+  TRY_DIFFERENT_DATE: "Try Diff Date",
+  TRY_DIFFERENT_DURATION: "Try Diff Duration",
   
   // Duration Options - Dynamic (generated from pricing)
   NOT_SURE_TEAM: "Not sure? Let's talk to the team 👥",
