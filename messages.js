@@ -49,7 +49,7 @@ const MESSAGES = {
   SELECT_DATE: "📅 *Select your preferred day:*",
   DATE_CHOOSE_PROMPT: "Choose the day you'd like to book:",
   DATE_OTHER_OPTION: "Or if you need a different date:",
-  DATE_SELECTED: (date) => `Great! You've selected ${date}. 📅\nNow let's choose your booking duration.`,
+  DATE_SELECTED: (date) => `Great! You've selected ${date}.`,
   
   // ==========================================
   // 6. DURATION SELECTION
@@ -141,10 +141,10 @@ PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +91931832
     `💰 ₹${amount}\n🆔 Booking: ${bookingId}`,
   
   LOCK_PIN_ACTIVE: (pin) => 
-    `🔐 *Your Access PIN: ${pin}*\n\nYou can enter and exit multiple times during your booking slot using this PIN.`,
+    `🔐 *Your Access PIN: ${pin}#*\n\nYou can enter and exit multiple times during your booking slot using this PIN.`,
   
   LOCK_PIN_DEFAULT: (pin) =>
-    `🔐 *Your Access PIN: ${pin}*\n\n✅ Pod PIN active during your booking slot.`,
+    `🔐 *Your Access PIN: ${pin}#*\n\n✅ Pod PIN active during your booking slot.`,
   
   // ==========================================
   // 10. BOOKING COMPLETION & SUCCESS
@@ -154,7 +154,7 @@ PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +91931832
   PAYMENT_SUCCESSFUL: (societyName, podId, date, timeSlot, duration, amount) =>
     `🎉 *Payment Successful!*\n\n📍 Society: ${societyName}\n🏠 Pod: ${podId}\n📅 Date: ${date}\n🕒 Time: ${timeSlot}\n⏰ Duration: ${duration} hours\n💰 Amount Paid: ₹${amount}\n\nYour pod is confirmed! 🎊`,
   
-  ACCESS_PIN: (pin) => `🔑 Your access PIN: *${pin}*\n\nYou can enter and exit multiple times during your booking slot using this PIN.`,
+  ACCESS_PIN: (pin) => `🔑 Your access PIN: *${pin}#*\n\nYou can enter and exit multiple times during your booking slot using this PIN.`,
   
   BOOKING_COMPLETE_THANK_YOU: "Thank you for booking with FocusPod! 🎉\n\nEnjoy your focused work session!",
   
