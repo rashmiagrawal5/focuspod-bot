@@ -835,6 +835,10 @@ async function handleSlotChoice(phone, slotChoice) {
       // Send guidelines and complete booking
       setTimeout(async () => {
         await sendMessage(phone, MESSAGES.BOOKING_COMPLETE_GUIDELINES);
+
+        setTimeout(async () => {
+          await sendMessage(phone, MESSAGES.SAVE_NUMBER_REMINDER);
+        }, 3000);
         userStates[phone] = { ...userStates[phone], step: USER_STATES.BOOKING_COMPLETED };
       }, 2000);
       

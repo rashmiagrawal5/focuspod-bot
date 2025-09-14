@@ -372,7 +372,7 @@ async function createBooking(bookingData) {
     
     // Generate booking ID if not provided
     const bookingId = bookingData.bookingId || generateTransactionId();
-    const createdAt = new Date().toISOString();
+    const createdAt = getISTTime().toFormat("dd MMM yyyy, HH:mm:ss");
     
     // Get society and pod info for TTLock
     const societyRes = await sheets.spreadsheets.values.get({

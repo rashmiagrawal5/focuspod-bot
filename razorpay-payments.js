@@ -229,6 +229,10 @@ async function completeBookingAfterPayment(paymentInfo) {
 
     setTimeout(async () => {
       await sendMessage(paymentInfo.phone, MESSAGES.BOOKING_COMPLETE_GUIDELINES);
+      // Send save number reminder
+  setTimeout(async () => {
+    await sendMessage(paymentInfo.phone, MESSAGES.SAVE_NUMBER_REMINDER);
+  }, 3000);
     }, 5000);
 
     console.log(`✅ Booking completed with PIN: ${assignedLockPin}`);
@@ -260,9 +264,14 @@ async function handlePaymentExpiry(payload) {
   const notes = paymentLink.notes;
   const displayDate = toDisplayFormat(notes.booking_date);
 
-  await sendMessage(notes.user_phone,
-    MESSAGES.PAYMENT_EXPIRED_MESSAGE(notes.booking_id, notes.pod_name || notes.pod_id, displayDate)
-  );
+  //await sendMessage(notes.user_phone,
+  //  MESSAGES.PAYMENT_EXPIRED_MESSAGE(notes.booking_id, notes.pod_name || notes.pod_id, displayDate)
+  //);
+  // Log to Google Sheets instead of sending message
+await logError('Payment', notes.user_phone, `Payment expired for booking ${notes.booking_id} - ${notes.pod_name || notes.pod_id} on ${displayDate}`);
+
+console.log(`⏰ Payment expired (suppressed message): ${notes.booking_id} for ${notes.user_phone}`);
+
 
   if (global.pendingPayments[paymentLink.id]) delete global.pendingPayments[paymentLink.id];
   return { success: true, status: 'expired' };

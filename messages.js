@@ -163,6 +163,7 @@ PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +91931832
   BOOKING_ALREADY_CONFIRMED: "🎉 *Your booking is already confirmed!*\n\nIf you need help or want to make another booking, please let us know!\n\nType \"new booking\" to start fresh or \"help\" for assistance.",
   
   BOOKING_CANCELLED: "Your booking has been cancelled. No charges applied.\n\nWould you like to try booking again?",
+  SAVE_NUMBER_REMINDER: "💾 *Save this WhatsApp number!*\n📱 Just send \"Hi\" to book your next pod - Quick booking in under 2 minutes! ⚡",
   
   // ==========================================
   // 11. QUESTIONS & SUPPORT
