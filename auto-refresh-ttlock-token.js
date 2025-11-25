@@ -10,10 +10,11 @@ require('dotenv').config();
 const CLIENT_ID = process.env.TTLOCK_CLIENT_ID;
 const CLIENT_SECRET = process.env.TTLOCK_CLIENT_SECRET;
 const CURRENT_TOKEN = process.env.TTLOCK_ACCESS_TOKEN;
+const CURRENT_REFRESH_TOKEN = process.env.TTLOCK_REFRESH_TOKEN;
 
-// TTLock credentials
-const USERNAME = 'rashmi.agrawal0905@gmail.com';
-const PASSWORD = 'Geet@@300322';
+// Fallback credentials (commented out - using refresh token instead)
+// const USERNAME = 'rashmi.agrawal0905@gmail.com';
+// const PASSWORD = 'Geet@@300322';
 
 // Token refresh threshold: refresh if token expires in less than 7 days
 const REFRESH_THRESHOLD_DAYS = 7;
@@ -105,21 +106,25 @@ function updateEnvFile(accessToken, refreshToken) {
   }
 }
 
-// Get new access token
+// Get new access token using refresh token (secure method)
 async function refreshAccessToken() {
-  console.log('\n🔄 Refreshing access token...\n');
+  console.log('\n🔄 Refreshing access token using refresh token...\n');
+
+  if (!CURRENT_REFRESH_TOKEN) {
+    console.error('❌ No refresh token available in .env');
+    console.error('⚠️  Please run: node get-ttlock-token-simple.js');
+    return false;
+  }
 
   try {
-    // Create MD5 hash of password
-    const passwordMd5 = crypto.createHash('md5').update(PASSWORD).digest('hex');
+    console.log('📤 Using refresh_token grant type (secure, no password needed)');
 
     const response = await axios.post('https://euapi.ttlock.com/oauth2/token', null, {
       params: {
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,
-        username: USERNAME,
-        password: passwordMd5,
-        grant_type: 'password'
+        grant_type: 'refresh_token',
+        refresh_token: CURRENT_REFRESH_TOKEN
       },
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -130,7 +135,7 @@ async function refreshAccessToken() {
     if (response.data.access_token) {
       const { access_token, refresh_token, expires_in } = response.data;
 
-      console.log('✅ New token obtained successfully!');
+      console.log('✅ New token obtained successfully (via refresh token)!');
       console.log(`🔑 Token: ${access_token.substring(0, 15)}...`);
       console.log(`⏰ Expires in: ${expires_in} seconds (${Math.floor(expires_in / 86400)} days)`);
 
@@ -156,6 +161,7 @@ async function refreshAccessToken() {
 
   } catch (error) {
     console.error('❌ Token refresh failed:', error.response?.data || error.message);
+    console.error('⚠️  Refresh token may be invalid. Run: node get-ttlock-token-simple.js');
     return false;
   }
 }

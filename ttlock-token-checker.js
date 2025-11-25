@@ -1,4 +1,5 @@
 // ttlock-token-checker.js - Check and refresh TTLock token on bot startup
+// Uses refresh token for secure token renewal (no password storage)
 const axios = require('axios');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -6,11 +7,14 @@ const path = require('path');
 
 const CLIENT_ID = process.env.TTLOCK_CLIENT_ID;
 const CLIENT_SECRET = process.env.TTLOCK_CLIENT_SECRET;
-const USERNAME = 'rashmi.agrawal0905@gmail.com';
-const PASSWORD = 'Geet@@300322';
 
 const REFRESH_THRESHOLD_DAYS = 7;
 const TOKEN_VALIDITY_DAYS = 90;
+
+// Fallback credentials (only used if refresh token fails)
+// TODO: Remove these after verifying refresh token flow works
+// const USERNAME = 'rashmi.agrawal0905@gmail.com';
+// const PASSWORD = 'Geet@@300322';
 
 // Check if token needs refresh
 function shouldRefreshToken() {
@@ -81,20 +85,26 @@ function updateEnvFile(accessToken, refreshToken) {
   }
 }
 
-// Refresh token
+// Refresh token using refresh_token grant type (secure, no password needed)
 async function refreshToken() {
-  console.log('🔄 Refreshing TTLock token...');
+  console.log('🔄 Refreshing TTLock token using refresh token...');
+
+  const currentRefreshToken = process.env.TTLOCK_REFRESH_TOKEN;
+
+  if (!currentRefreshToken) {
+    console.error('❌ No refresh token available. Please run: node get-ttlock-token-simple.js');
+    return false;
+  }
 
   try {
-    const passwordMd5 = crypto.createHash('md5').update(PASSWORD).digest('hex');
+    console.log('📤 Using refresh_token grant type (secure method)');
 
     const response = await axios.post('https://euapi.ttlock.com/oauth2/token', null, {
       params: {
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,
-        username: USERNAME,
-        password: passwordMd5,
-        grant_type: 'password'
+        grant_type: 'refresh_token',
+        refresh_token: currentRefreshToken
       },
       timeout: 15000
     });
@@ -105,14 +115,18 @@ async function refreshToken() {
       updateEnvFile(access_token, refresh_token);
       saveTokenInfo();
 
-      console.log('✅ TTLock token refreshed successfully');
-      console.log('⚠️  Remember to update Railway: railway variables --set TTLOCK_ACCESS_TOKEN="' + access_token.substring(0, 15) + '..."');
+      console.log('✅ TTLock token refreshed successfully (using refresh token)');
+      console.log('🔑 New token preview: ' + access_token.substring(0, 15) + '...');
+      console.log('⚠️  Remember to update Railway:');
+      console.log('   railway variables --set TTLOCK_ACCESS_TOKEN="' + access_token + '"');
+      console.log('   railway variables --set TTLOCK_REFRESH_TOKEN="' + refresh_token + '"');
 
       return true;
     }
 
   } catch (error) {
     console.error('❌ Token refresh failed:', error.response?.data || error.message);
+    console.error('⚠️  You may need to regenerate tokens manually: node get-ttlock-token-simple.js');
     return false;
   }
 }
