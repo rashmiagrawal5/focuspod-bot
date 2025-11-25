@@ -560,8 +560,15 @@ app.use('*', (req, res) => {
 // ENHANCED SERVER STARTUP
 // ==========================================
 
+// Check TTLock token before starting server
+const { checkTokenOnStartup } = require('./ttlock-token-checker');
+
 // Start server with enhanced logging
-app.listen(PORT, () => {
+async function startServer() {
+  // Check and refresh TTLock token if needed
+  await checkTokenOnStartup();
+
+  app.listen(PORT, () => {
   console.log(`🚀 FocusPod WhatsApp Bot running on port ${PORT}`);
   console.log(`🔗 Webhook URL: http://localhost:${PORT}/webhook`);
   console.log(`💳 Razorpay Webhook: ${process.env.WEBHOOK_BASE_URL}/razorpay-webhook`);
@@ -601,4 +608,11 @@ app.listen(PORT, () => {
   }
   
   console.log('🎯 Ready to receive WhatsApp messages!');
+  });
+}
+
+// Start the server
+startServer().catch(error => {
+  console.error('❌ Failed to start server:', error);
+  process.exit(1);
 });

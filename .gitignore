@@ -20,3 +20,6 @@ backup-files/
 # Other temporary files
 *.tmp
 .cache/
+
+# TTLock token tracking (contains timestamps)
+.ttlock-token-info.json
