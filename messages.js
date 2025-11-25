@@ -100,30 +100,30 @@ const MESSAGES = {
   // Payment link sent (SHORTENED - no variables)
   PAYMENT_LINK_SUCCESS: "💳 *Payment Link Sent!*\n\n🔗 Click to pay securely\n⚡ You'll get automatic confirmation within 30 seconds after payment!",
   
-  PAYMENT_LINK_FAILED: "❌ Payment link failed. Try again or call: 📞 +919318323127",
+  PAYMENT_LINK_FAILED: "❌ Payment link failed. Try again or call: 📞 +919036089111",
   
   PAYMENT_PROCESSING: (amount) => `💳 Processing payment of ₹${amount}...\n\nPlease wait while we confirm your payment.`,
   
-  PAYMENT_STATUS_CHECK: "✅ Payment received! Confirmation coming in 1-2 minutes.\n\nNo confirmation? Call: 📞 +919318323127",
+  PAYMENT_STATUS_CHECK: "✅ Payment received! Confirmation coming in 1-2 minutes.\n\nNo confirmation? Call: 📞 +919036089111",
 
-PAYMENT_SUCCESS_AUTO: "✅ Payment successful! Check messages above for confirmation.\n\nNeed help? Call: 📞 +919318323127",
+PAYMENT_SUCCESS_AUTO: "✅ Payment successful! Check messages above for confirmation.\n\nNeed help? Call: 📞 +919036089111",
   
   // Payment issues and help
   PAYMENT_ISSUE: "❌ Payment issue.\n\nNo amount is charged if payment failed.\n\nWould you like to:",
   
-  PAYMENT_HELP: "Need help?\n\n1. Try payment link again\n2. Use different payment method\n3. Call: +919318323127",
+  PAYMENT_HELP: "Need help?\n\n1. Try payment link again\n2. Use different payment method\n3. Call: +919036089111",
 
-PAYMENT_SUPPORT_DETAILED: "🆘 *Payment Help*\n\nTry:\n• Different browser\n• Different UPI app\n• Debit/Credit card\n\nCall: +919318323127",
+PAYMENT_SUPPORT_DETAILED: "🆘 *Payment Help*\n\nTry:\n• Different browser\n• Different UPI app\n• Debit/Credit card\n\nCall: +919036089111",
 
-PAYMENT_STATUS_WAITING: "⏳ Waiting for payment...\n\nCompleted? Wait 1-2 mins.\nNeed help? Call: +919318323127",
+PAYMENT_STATUS_WAITING: "⏳ Waiting for payment...\n\nCompleted? Wait 1-2 mins.\nNeed help? Call: +919036089111",
 
-PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +919318323127",
+PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +919036089111",
 
   // Payment reminder and status messages
   PAYMENT_REMINDER: (amount, transactionId) => 
     `⏰ *Payment link will expire soon*\n`,
   
-  PAYMENT_RECEIVED_MANUAL: `✅ *Payment Received!* Your booking couldn't auto-complete. Our team will confirm within 5 minutes.\n\nSupport: +919318323127`,
+  PAYMENT_RECEIVED_MANUAL: `✅ *Payment Received!* Your booking couldn't auto-complete. Our team will confirm within 5 minutes.\n\nSupport: +919036089111`,
   
   
   PAYMENT_CANCELLED_MESSAGE: (bookingId, date, amount) =>
@@ -132,7 +132,7 @@ PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +91931832
   PAYMENT_EXPIRED_MESSAGE: (bookingId, podName, date) =>
     `⏰ *Payment Link Expired*\nBooking: ${bookingId}\nPod: ${podName}\nDate: ${date}`,
   
-  PAYMENT_ERROR_RETRY: `❌ *Payment Error* – Please try again or contact support 📞 +919318323127`,
+  PAYMENT_ERROR_RETRY: `❌ *Payment Error* – Please try again or contact support 📞 +919036089111`,
 
   PAYMENT_BOOKING_CONFIRMED: (societyName, podName, displayDate, startTime, endTime, amount, paymentId, bookingId) =>
     `✅ *Booking Confirmed!*\n\n` +
@@ -158,7 +158,7 @@ PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +91931832
   
   BOOKING_COMPLETE_THANK_YOU: "Thank you for booking with FocusPod! 🎉\n\nEnjoy your focused work session!",
   
-  BOOKING_COMPLETE_GUIDELINES: "🙌 Pod Guidelines:\n✅ For work, calls, study\n✅ Water/coffee allowed\n🧼 Keep clean | ❌ No food\n🕒 Exit after your booking\n\n🛟 Support: Call +919318323127",
+  BOOKING_COMPLETE_GUIDELINES: "🙌 Pod Guidelines:\n✅ For work, calls, study\n✅ Water/coffee allowed\n🧼 Keep clean | ❌ No food\n🕒 Exit after your booking\n\n🛟 Support: Call +919036089111",
 
   BOOKING_ALREADY_CONFIRMED: "🎉 *Your booking is already confirmed!*\n\nIf you need help or want to make another booking, please let us know!\n\nType \"new booking\" to start fresh or \"help\" for assistance.",
   
@@ -169,12 +169,12 @@ PAYMENT_TECHNICAL_ERROR: "❌ Technical error. Try again or call: 📞 +91931832
   // 11. QUESTIONS & SUPPORT
   // ==========================================
   
-  QUESTION_PROMPT: "🤖 No problem! Our team is here to help.\n\nPlease call or WhatsApp us directly:\n📞 +919318323127\n\n⏰ Available: 9 AM - 9 PM daily",
+  QUESTION_PROMPT: "🤖 No problem! Our team is here to help.\n\nPlease call or WhatsApp us directly:\n📞 +919036089111\n\n⏰ Available: 9 AM - 9 PM daily",
   
-  TEAM_SUPPORT_DATE: "No worries! Our team will help you find the perfect booking date.\n\nPlease call or WhatsApp us:\n📞 +919318323127\n⏰ Available: 9 AM - 9 PM daily",
-  TEAM_SUPPORT_DURATION: "No worries! Our team will help you find the perfect booking duration.\n\nPlease call or WhatsApp us:\n📞 +919318323127\n⏰ Available: 9 AM - 9 PM daily",
-  CONTACT_SUPPORT_DETAILS: "📞 *Contact Support*\n\nNeed immediate help?\n\n📞 *Call or WhatsApp:* +919318323127\n⏰ Available: 9 AM - 9 PM daily\n\nWe're here to help! 😊",
-  MEDIA_REDIRECT_SUPPORT: "📷 To share images or documents, please WhatsApp them directly to our support team:\n\n📞 *WhatsApp:* +919318323127\n⏰ Available: 9 AM - 9 PM daily\n\nThey'll assist you immediately! 😊",
+  TEAM_SUPPORT_DATE: "No worries! Our team will help you find the perfect booking date.\n\nPlease call or WhatsApp us:\n📞 +919036089111\n⏰ Available: 9 AM - 9 PM daily",
+  TEAM_SUPPORT_DURATION: "No worries! Our team will help you find the perfect booking duration.\n\nPlease call or WhatsApp us:\n📞 +919036089111\n⏰ Available: 9 AM - 9 PM daily",
+  CONTACT_SUPPORT_DETAILS: "📞 *Contact Support*\n\nNeed immediate help?\n\n📞 *Call or WhatsApp:* +919036089111\n⏰ Available: 9 AM - 9 PM daily\n\nWe're here to help! 😊",
+  MEDIA_REDIRECT_SUPPORT: "📷 To share images or documents, please WhatsApp them directly to our support team:\n\n📞 *WhatsApp:* +919036089111\n⏰ Available: 9 AM - 9 PM daily\n\nThey'll assist you immediately! 😊",
   // ==========================================
   // 12. ERROR MESSAGES
   // ==========================================

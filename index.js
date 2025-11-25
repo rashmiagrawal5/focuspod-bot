@@ -404,7 +404,7 @@ app.get('/payment-success', (req, res) => {
         
         ${razorpay_payment_id ? `<div class="payment-id">Payment ID: ${razorpay_payment_id}</div>` : ''}
         
-        <a href="https://wa.me/${process.env.PHONE_NUMBER_ID?.replace('whatsapp:', '') || '919318323127'}?text=Hi, I just completed my payment. Can you share my booking details?" class="whatsapp-btn">
+        <a href="https://wa.me/${process.env.PHONE_NUMBER_ID?.replace('whatsapp:', '') || '919036089111'}?text=Hi, I just completed my payment. Can you share my booking details?" class="whatsapp-btn">
           📱 Get Booking Details on WhatsApp
         </a>
       </div>
@@ -491,7 +491,7 @@ app.get('/payment-failure', (req, res) => {
           </p>
         ` : ''}
         
-        <a href="https://wa.me/${process.env.PHONE_NUMBER_ID?.replace('whatsapp:', '') || '919318323127'}?text=Hi, I had a payment issue. Can you help me book a pod?" class="whatsapp-btn">
+        <a href="https://wa.me/${process.env.PHONE_NUMBER_ID?.replace('whatsapp:', '') || '919036089111'}?text=Hi, I had a payment issue. Can you help me book a pod?" class="whatsapp-btn">
           📱 Get Help on WhatsApp
         </a>
       </div>
