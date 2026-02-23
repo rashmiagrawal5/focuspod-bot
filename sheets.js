@@ -469,6 +469,165 @@ async function logError(errorType, phone = '', errorMessage = '') {
   }
 }
 
+// ==========================================
+// TTLock Token Management (Google Sheets)
+// ==========================================
+const TTLOCK_CONFIG_SHEET = 'TTLock_Config';
+
+// Get TTLock tokens from Google Sheets
+async function getTTLockTokens() {
+  try {
+    const sheets = await getSheetClient();
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${TTLOCK_CONFIG_SHEET}!A2:D2`, // Key, AccessToken, RefreshToken, LastRefresh
+    });
+
+    const rows = res.data.values || [];
+
+    if (rows.length === 0 || !rows[0][1]) {
+      console.log('⚠️  No TTLock tokens found in Google Sheets');
+      return null;
+    }
+
+    const [key, accessToken, refreshToken, lastRefresh] = rows[0];
+
+    console.log(`🔑 TTLock tokens loaded from Google Sheets`);
+    console.log(`📅 Last refresh: ${lastRefresh || 'Unknown'}`);
+
+    return {
+      accessToken,
+      refreshToken,
+      lastRefresh: lastRefresh ? new Date(lastRefresh) : null
+    };
+
+  } catch (error) {
+    console.error('❌ Error reading TTLock tokens from Google Sheets:', error.message);
+
+    // If sheet doesn't exist, return null (will fall back to env vars)
+    if (error.message.includes('Unable to parse range')) {
+      console.log('⚠️  TTLock_Config sheet not found. Create it or use env vars as fallback.');
+    }
+
+    return null;
+  }
+}
+
+// Ensure TTLock_Config sheet exists
+async function ensureTTLockConfigSheetExists() {
+  try {
+    const sheets = await getSheetClient();
+
+    // Try to get the sheet metadata
+    const spreadsheet = await sheets.spreadsheets.get({
+      spreadsheetId: SPREADSHEET_ID
+    });
+
+    const sheetExists = spreadsheet.data.sheets.some(
+      sheet => sheet.properties.title === TTLOCK_CONFIG_SHEET
+    );
+
+    if (!sheetExists) {
+      console.log(`📝 Creating ${TTLOCK_CONFIG_SHEET} sheet...`);
+
+      // Create the new sheet
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        resource: {
+          requests: [{
+            addSheet: {
+              properties: {
+                title: TTLOCK_CONFIG_SHEET
+              }
+            }
+          }]
+        }
+      });
+
+      // Add header row
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${TTLOCK_CONFIG_SHEET}!A1:D1`,
+        valueInputOption: 'RAW',
+        resource: {
+          values: [['Key', 'AccessToken', 'RefreshToken', 'LastRefresh']]
+        },
+      });
+
+      console.log(`✅ ${TTLOCK_CONFIG_SHEET} sheet created successfully`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Error ensuring TTLock_Config sheet exists:', error.message);
+    return false;
+  }
+}
+
+// Save TTLock tokens to Google Sheets
+async function saveTTLockTokens(accessToken, refreshToken) {
+  try {
+    // Ensure the sheet exists
+    await ensureTTLockConfigSheetExists();
+
+    const sheets = await getSheetClient();
+    const timestamp = new Date().toISOString();
+
+    // Update or insert token data
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${TTLOCK_CONFIG_SHEET}!A2:D2`,
+      valueInputOption: 'RAW',
+      resource: {
+        values: [['ttlock_tokens', accessToken, refreshToken, timestamp]]
+      },
+    });
+
+    console.log(`✅ TTLock tokens saved to Google Sheets`);
+    console.log(`🔑 Access Token: ${accessToken.substring(0, 15)}...`);
+    console.log(`📅 Timestamp: ${timestamp}`);
+
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error saving TTLock tokens to Google Sheets:', error.message);
+    return false;
+  }
+}
+
+// Check if TTLock token needs refresh (based on Google Sheets timestamp)
+async function shouldRefreshTTLockToken() {
+  try {
+    const tokens = await getTTLockTokens();
+
+    if (!tokens || !tokens.lastRefresh) {
+      console.log('⚠️  No token refresh date found, needs refresh');
+      return true;
+    }
+
+    const lastRefresh = new Date(tokens.lastRefresh);
+    const now = new Date();
+    const daysSinceRefresh = (now - lastRefresh) / (1000 * 60 * 60 * 24);
+
+    console.log(`🔍 TTLock token age: ${Math.floor(daysSinceRefresh)} days`);
+
+    // Refresh if older than 83 days (7 days before 90-day expiry)
+    const needsRefresh = daysSinceRefresh >= 83;
+
+    if (needsRefresh) {
+      console.log('⚠️  TTLock token needs refresh (>83 days old)');
+    } else {
+      console.log(`✅ TTLock token still valid (${Math.floor(90 - daysSinceRefresh)} days remaining)`);
+    }
+
+    return needsRefresh;
+
+  } catch (error) {
+    console.error('❌ Error checking token refresh status:', error);
+    return false;
+  }
+}
+
 module.exports = {
   getUserByPhone,
   addNewUser,
@@ -483,5 +642,8 @@ module.exports = {
   getPriceForDuration,     // NEW: Export pricing functions
   getLockIdForPod,          // NEW: Export lock ID lookup
   logSupportRequest,
-  logError
+  logError,
+  getTTLockTokens,         // NEW: TTLock token management
+  saveTTLockTokens,        // NEW: TTLock token management
+  shouldRefreshTTLockToken // NEW: TTLock token management
 };

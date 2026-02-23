@@ -4,7 +4,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 const { DateTime } = require("luxon");
-const { logError } = require('./sheets');
+const { logError, getTTLockTokens } = require('./sheets');
 
 // Import date utilities for consistency
 const { toSheetFormat, fromSheetFormat, getISTTime, convertToTimestamp } = require('./date-utils');
@@ -12,7 +12,10 @@ const { toSheetFormat, fromSheetFormat, getISTTime, convertToTimestamp } = requi
 // TTLock API Configuration
 const TTLOCK_API_BASE = 'https://euapi.ttlock.com'; // Your working region
 const CLIENT_ID = process.env.TTLOCK_CLIENT_ID;
-const ACCESS_TOKEN = process.env.TTLOCK_ACCESS_TOKEN;
+
+// Token will be loaded from Google Sheets on first API call
+let ACCESS_TOKEN = null;
+let REFRESH_TOKEN = null;
 
 // Fallback API regions if primary fails
 const FALLBACK_REGIONS = [
@@ -20,8 +23,39 @@ const FALLBACK_REGIONS = [
   'https://api.sciener.com'
 ];
 
+// Load tokens from Google Sheets (with fallback to env vars)
+async function loadTTLockTokens() {
+  if (ACCESS_TOKEN) {
+    // Already loaded
+    return { accessToken: ACCESS_TOKEN, refreshToken: REFRESH_TOKEN };
+  }
+
+  try {
+    console.log('🔍 Loading TTLock tokens from Google Sheets...');
+    const tokens = await getTTLockTokens();
+
+    if (tokens && tokens.accessToken) {
+      ACCESS_TOKEN = tokens.accessToken;
+      REFRESH_TOKEN = tokens.refreshToken;
+      console.log('✅ TTLock tokens loaded from Google Sheets');
+      return tokens;
+    }
+  } catch (error) {
+    console.log('⚠️  Failed to load tokens from Google Sheets:', error.message);
+  }
+
+  // Fallback to environment variables
+  console.log('📝 Falling back to environment variables for TTLock tokens');
+  ACCESS_TOKEN = process.env.TTLOCK_ACCESS_TOKEN;
+  REFRESH_TOKEN = process.env.TTLOCK_REFRESH_TOKEN;
+
+  return { accessToken: ACCESS_TOKEN, refreshToken: REFRESH_TOKEN };
+}
+
 // Helper function to make TTLock API calls with fallback
 async function makeTTLockRequest(endpoint, data = {}, retries = 2) {
+  // Ensure tokens are loaded
+  await loadTTLockTokens();
   const payload = {
     clientId: CLIENT_ID,
     accessToken: ACCESS_TOKEN,

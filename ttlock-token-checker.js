@@ -5,6 +5,9 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
+// Import Google Sheets token management
+const { getTTLockTokens, saveTTLockTokens, shouldRefreshTTLockToken } = require('./sheets');
+
 const CLIENT_ID = process.env.TTLOCK_CLIENT_ID;
 const CLIENT_SECRET = process.env.TTLOCK_CLIENT_SECRET;
 
@@ -16,26 +19,33 @@ const TOKEN_VALIDITY_DAYS = 90;
 // const USERNAME = 'rashmi.agrawal0905@gmail.com';
 // const PASSWORD = 'Geet@@300322';
 
-// Check if token needs refresh
-function shouldRefreshToken() {
-  const tokenFile = path.join(__dirname, '.ttlock-token-info.json');
-
+// Check if token needs refresh (using Google Sheets)
+async function checkTokenNeedsRefresh() {
   try {
-    if (fs.existsSync(tokenFile)) {
-      const tokenInfo = JSON.parse(fs.readFileSync(tokenFile, 'utf8'));
-      const lastRefresh = new Date(tokenInfo.lastRefresh);
-      const now = new Date();
-      const daysSinceRefresh = (now - lastRefresh) / (1000 * 60 * 60 * 24);
-
-      console.log(`🔑 TTLock token age: ${Math.floor(daysSinceRefresh)} days (expires in ~${Math.floor(TOKEN_VALIDITY_DAYS - daysSinceRefresh)} days)`);
-
-      return daysSinceRefresh >= (TOKEN_VALIDITY_DAYS - REFRESH_THRESHOLD_DAYS);
-    }
+    return await shouldRefreshTTLockToken();
   } catch (error) {
-    console.log('⚠️  Unable to read token info, will refresh on next check');
-  }
+    console.log('⚠️  Error checking token from Google Sheets:', error.message);
 
-  return false;
+    // Fallback to local file
+    const tokenFile = path.join(__dirname, '.ttlock-token-info.json');
+
+    try {
+      if (fs.existsSync(tokenFile)) {
+        const tokenInfo = JSON.parse(fs.readFileSync(tokenFile, 'utf8'));
+        const lastRefresh = new Date(tokenInfo.lastRefresh);
+        const now = new Date();
+        const daysSinceRefresh = (now - lastRefresh) / (1000 * 60 * 60 * 24);
+
+        console.log(`🔑 TTLock token age (local): ${Math.floor(daysSinceRefresh)} days (expires in ~${Math.floor(TOKEN_VALIDITY_DAYS - daysSinceRefresh)} days)`);
+
+        return daysSinceRefresh >= (TOKEN_VALIDITY_DAYS - REFRESH_THRESHOLD_DAYS);
+      }
+    } catch (fileError) {
+      console.log('⚠️  Unable to read local token info');
+    }
+
+    return false;
+  }
 }
 
 // Save token info
@@ -89,7 +99,20 @@ function updateEnvFile(accessToken, refreshToken) {
 async function refreshToken() {
   console.log('🔄 Refreshing TTLock token using refresh token...');
 
-  const currentRefreshToken = process.env.TTLOCK_REFRESH_TOKEN;
+  let currentRefreshToken = process.env.TTLOCK_REFRESH_TOKEN;
+
+  // Try to get refresh token from Google Sheets if not in env
+  if (!currentRefreshToken) {
+    try {
+      const tokens = await getTTLockTokens();
+      if (tokens && tokens.refreshToken) {
+        currentRefreshToken = tokens.refreshToken;
+        console.log('📝 Using refresh token from Google Sheets');
+      }
+    } catch (error) {
+      console.log('⚠️  Could not load refresh token from Google Sheets');
+    }
+  }
 
   if (!currentRefreshToken) {
     console.error('❌ No refresh token available. Please run: node get-ttlock-token-simple.js');
@@ -112,14 +135,24 @@ async function refreshToken() {
     if (response.data.access_token) {
       const { access_token, refresh_token } = response.data;
 
+      // Update .env file (for local development)
       updateEnvFile(access_token, refresh_token);
       saveTokenInfo();
 
+      // Save to Google Sheets (primary storage)
+      console.log('💾 Saving tokens to Google Sheets...');
+      const sheetSaved = await saveTTLockTokens(access_token, refresh_token);
+
       console.log('✅ TTLock token refreshed successfully (using refresh token)');
       console.log('🔑 New token preview: ' + access_token.substring(0, 15) + '...');
-      console.log('⚠️  Remember to update Railway:');
-      console.log('   railway variables --set TTLOCK_ACCESS_TOKEN="' + access_token + '"');
-      console.log('   railway variables --set TTLOCK_REFRESH_TOKEN="' + refresh_token + '"');
+
+      if (sheetSaved) {
+        console.log('✅ Tokens saved to Google Sheets (Railway will auto-sync)');
+      } else {
+        console.log('⚠️  Google Sheets update failed. Update Railway manually:');
+        console.log('   railway variables --set TTLOCK_ACCESS_TOKEN="' + access_token + '"');
+        console.log('   railway variables --set TTLOCK_REFRESH_TOKEN="' + refresh_token + '"');
+      }
 
       return true;
     }
@@ -140,7 +173,9 @@ async function checkTokenOnStartup() {
 
   console.log('🔍 Checking TTLock token status...');
 
-  if (shouldRefreshToken()) {
+  const needsRefresh = await checkTokenNeedsRefresh();
+
+  if (needsRefresh) {
     console.log('⚠️  TTLock token needs refresh (within 7 days of expiry)');
     await refreshToken();
   } else {
@@ -150,6 +185,6 @@ async function checkTokenOnStartup() {
 
 module.exports = {
   checkTokenOnStartup,
-  shouldRefreshToken,
+  checkTokenNeedsRefresh,
   refreshToken
 };
