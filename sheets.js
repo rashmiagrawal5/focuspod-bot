@@ -611,11 +611,11 @@ async function shouldRefreshTTLockToken() {
 
     console.log(`🔍 TTLock token age: ${Math.floor(daysSinceRefresh)} days`);
 
-    // Refresh if older than 83 days (7 days before 90-day expiry)
-    const needsRefresh = daysSinceRefresh >= 83;
+    // Refresh if older than 79 days (11 days before 90-day expiry)
+    const needsRefresh = daysSinceRefresh >= 79;
 
     if (needsRefresh) {
-      console.log('⚠️  TTLock token needs refresh (>83 days old)');
+      console.log('⚠️  TTLock token needs refresh (>79 days old)');
     } else {
       console.log(`✅ TTLock token still valid (${Math.floor(90 - daysSinceRefresh)} days remaining)`);
     }

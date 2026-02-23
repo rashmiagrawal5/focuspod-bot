@@ -11,7 +11,7 @@ const { getTTLockTokens, saveTTLockTokens, shouldRefreshTTLockToken } = require(
 const CLIENT_ID = process.env.TTLOCK_CLIENT_ID;
 const CLIENT_SECRET = process.env.TTLOCK_CLIENT_SECRET;
 
-const REFRESH_THRESHOLD_DAYS = 7;
+const REFRESH_THRESHOLD_DAYS = 11;
 const TOKEN_VALIDITY_DAYS = 90;
 
 // Fallback credentials (only used if refresh token fails)

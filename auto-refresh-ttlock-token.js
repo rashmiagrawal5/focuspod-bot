@@ -19,8 +19,8 @@ const CURRENT_REFRESH_TOKEN = process.env.TTLOCK_REFRESH_TOKEN;
 // const USERNAME = 'rashmi.agrawal0905@gmail.com';
 // const PASSWORD = 'Geet@@300322';
 
-// Token refresh threshold: refresh if token expires in less than 7 days
-const REFRESH_THRESHOLD_DAYS = 7;
+// Token refresh threshold: refresh if token expires in less than 11 days
+const REFRESH_THRESHOLD_DAYS = 11;
 const TOKEN_VALIDITY_DAYS = 90; // TTLock tokens are valid for 90 days
 
 console.log('🔄 TTLock Auto Token Refresh\n');
