@@ -568,9 +568,9 @@ async function startServer() {
   // Check and refresh TTLock token if needed on startup
   await checkTokenOnStartup();
 
-  // Set up periodic token check (every 24 hours)
+  // Set up periodic token check (every 10 days)
   // This will auto-refresh the token when it's 83+ days old (7 days before 90-day expiry)
-  const TOKEN_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  const TOKEN_CHECK_INTERVAL = 10 * 24 * 60 * 60 * 1000; // 10 days in milliseconds
 
   setInterval(async () => {
     console.log('\n🔄 Running scheduled TTLock token check...');
@@ -581,7 +581,7 @@ async function startServer() {
     }
   }, TOKEN_CHECK_INTERVAL);
 
-  console.log('⏰ Scheduled daily TTLock token check (auto-refresh when >83 days old)');
+  console.log('⏰ Scheduled token check every 10 days (auto-refresh when >83 days old)');
 
   app.listen(PORT, () => {
   console.log(`🚀 FocusPod WhatsApp Bot running on port ${PORT}`);

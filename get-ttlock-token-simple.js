@@ -8,15 +8,23 @@ require('dotenv').config();
 const CLIENT_ID = process.env.TTLOCK_CLIENT_ID;
 const CLIENT_SECRET = process.env.TTLOCK_CLIENT_SECRET;
 
-// TTLock account credentials
-const USERNAME = 'rashmi.agrawal0905@gmail.com';
-const PASSWORD = 'Geet@@300322';
+// TTLock account credentials - read from environment variables
+const USERNAME = process.env.TTLOCK_USERNAME;
+const PASSWORD = process.env.TTLOCK_PASSWORD;
 
 console.log('🔐 TTLock Token Generator (Username/Password)\n');
 console.log('=' .repeat(60));
 
 if (!CLIENT_ID || !CLIENT_SECRET) {
   console.log('❌ Missing CLIENT_ID or CLIENT_SECRET in .env file');
+  process.exit(1);
+}
+
+if (!USERNAME || !PASSWORD) {
+  console.log('❌ Missing TTLOCK_USERNAME or TTLOCK_PASSWORD in .env file');
+  console.log('⚠️  Add these to your .env file:');
+  console.log('   TTLOCK_USERNAME=your_email@example.com');
+  console.log('   TTLOCK_PASSWORD=your_password');
   process.exit(1);
 }
 
