@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const { sendMessage, sendButtons } = require('./whatsapp');
 const { toSheetFormat, toDisplayFormat } = require('./date-utils');
 const { MESSAGES } = require('./messages');
-const { logError } = require('./sheets');
+const { logError, getUserByPhone, updateFirstBookingStatus } = require('./sheets');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -234,6 +234,21 @@ async function completeBookingAfterPayment(paymentInfo) {
     await sendMessage(paymentInfo.phone, MESSAGES.SAVE_NUMBER_REMINDER);
   }, 3000);
     }, 5000);
+
+    // Update FirstBookingDone if this is user's first booking
+    try {
+      const user = await getUserByPhone(paymentInfo.phone);
+      if (user && user.FirstBookingDone === 'No') {
+        await updateFirstBookingStatus(
+          paymentInfo.phone,
+          displayDate,
+          parseInt(paymentInfo.duration)
+        );
+        console.log('✅ Updated first booking status after paid booking');
+      }
+    } catch (err) {
+      console.error('⚠️ Error updating first booking status:', err.message);
+    }
 
     console.log(`✅ Booking completed with PIN: ${assignedLockPin}`);
   } catch (err) {
