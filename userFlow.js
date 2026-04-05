@@ -11,7 +11,8 @@ const {
   getPricing,              // NEW: Dynamic pricing
   getPriceForDuration,      // NEW: Dynamic pricing
   logSupportRequest,
-  logError
+  logError,
+  isFirstFreeBookingEnabled // NEW: Settings-based config
 } = require("./sheets");
 
 // Import the simple availability system
@@ -139,28 +140,30 @@ async function handleInitialMessage(phone, message, user) {
     }
     
     // Send welcome message for first-time user
-    await sendMessage(phone, MESSAGES.WELCOME_NEW_USER);
-    
+    const freeEnabled = await isFirstFreeBookingEnabled();
+    await sendMessage(phone, freeEnabled ? MESSAGES.WELCOME_NEW_USER : MESSAGES.WELCOME_NEW_USER_PAID);
+
     // Show action buttons
     await sendButtons(phone, MESSAGES.WHAT_WOULD_YOU_LIKE, [
       BUTTONS.BOOK_POD,
       BUTTONS.ASK_QUESTION
     ]);
-    
+
     userStates[phone] = { step: USER_STATES.INITIAL };
     return;
   }
-  
+
   // Store QR society info for existing users too
   if (societyFromQR) {
     userStates[phone] = { step: USER_STATES.INITIAL, qrSociety: societyFromQR };
   }
-  
+
   // Existing user
   if (user.FirstBookingDone === 'No') {
     // First-time user (exists in DB but hasn't made first booking)
     const userName = user.Name || 'there';
-    await sendMessage(phone, MESSAGES.WELCOME_EXISTING_FIRST_TIME(userName));
+    const freeEnabled = await isFirstFreeBookingEnabled();
+    await sendMessage(phone, freeEnabled ? MESSAGES.WELCOME_EXISTING_FIRST_TIME(userName) : MESSAGES.WELCOME_EXISTING_FIRST_TIME_PAID(userName));
   } else {
     // Returning user
     const userName = user.Name || 'there';
@@ -403,30 +406,31 @@ async function handleDurationSelection(phone) {
   console.log(`⏰ Starting duration selection for ${phone}`);
   
   try {
-    // Check if this is user's first booking
+    // Check if this is user's first booking AND if free booking is enabled
     const user = await getUserByPhone(phone);
-    const isFirstBooking = user && user.FirstBookingDone === 'No';
-    
+    const freeEnabled = await isFirstFreeBookingEnabled();
+    const isFirstBooking = freeEnabled && user && user.FirstBookingDone === 'No';
+
     if (isFirstBooking) {
       await sendMessage(phone, "⏰ *Choose your booking duration:*\n\n" + MESSAGES.FIRST_BOOKING_2HR_FREE);
     } else {
       await sendMessage(phone, MESSAGES.SELECT_DURATION);
     }
-    
+
     // NEW: Get dynamic pricing from Google Sheets
     const pricing = await getPricing();
     console.log(`💰 Loaded pricing:`, pricing);
-    
+
     // Create duration buttons with dynamic pricing
     const durationButtons = [];
-    
+
     // Special handling for first booking - only 2hr is free
     if (isFirstBooking) {
       if (pricing[2]) durationButtons.push(`2hr – FREE 🎉`);
       if (pricing[4]) durationButtons.push(MESSAGES.DURATION_BUTTON(4, pricing[4]));
       if (pricing[8]) durationButtons.push(MESSAGES.DURATION_BUTTON(8, pricing[8]));
     } else {
-      // Regular pricing for returning users
+      // Regular pricing for returning users (or when free booking disabled)
       if (pricing[2]) durationButtons.push(MESSAGES.DURATION_BUTTON(2, pricing[2]));
       if (pricing[4]) durationButtons.push(MESSAGES.DURATION_BUTTON(4, pricing[4]));
       if (pricing[8]) durationButtons.push(MESSAGES.DURATION_BUTTON(8, pricing[8]));
@@ -470,7 +474,8 @@ async function handleDurationChoice(phone, durationChoice) {
     let price;
     // Check if user selected FREE 2hr option
     const user = await getUserByPhone(phone);
-    const isFirstBooking = user && user.FirstBookingDone === 'No';
+    const freeEnabled = await isFirstFreeBookingEnabled();
+    const isFirstBooking = freeEnabled && user && user.FirstBookingDone === 'No';
     const isFree2Hr = isFirstBooking && durationChoice.includes("FREE") && durationChoice.includes("2hr");
 
     
@@ -747,7 +752,8 @@ async function handleSlotChoice(phone, slotChoice) {
     const societyName = userSociety ? userSociety.name : user.SocietyId;
     
     // Check if this is a FREE 2-hour first booking
-    const isFirstBooking = user && user.FirstBookingDone === 'No';
+    const freeEnabledForSlot = await isFirstFreeBookingEnabled();
+    const isFirstBooking = freeEnabledForSlot && user && user.FirstBookingDone === 'No';
     const isFree2Hr = isFirstBooking && selectedDuration === 2 && isFreeBooking === true;
     
     console.log(`📅 DEBUG: Using selectedDate: ${selectedDate} (should be in sheet format)`);

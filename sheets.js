@@ -20,10 +20,42 @@ if (process.env.GOOGLE_CREDENTIALS) {
 const SPREADSHEET_ID = '1TOQ9QT2zYj7uH0Y32OIHDY-iUC0gvYMRnLNJLaYhfwY';
 const USERS_SHEET = 'Users';
 const PRICING_SHEET = 'Pricing';
+const SETTINGS_SHEET = 'Settings';
 
 async function getSheetClient() {
   const client = await auth.getClient();
   return google.sheets({ version: 'v4', auth: client });
+}
+
+// Read a setting from the Settings sheet by key
+async function getSetting(key) {
+  try {
+    const sheets = await getSheetClient();
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SETTINGS_SHEET}!A2:B`,
+    });
+
+    const rows = res.data.values || [];
+    for (const row of rows) {
+      if (row[0] === key) {
+        return row[1] || '';
+      }
+    }
+    console.log(`⚠️ Setting "${key}" not found in Settings sheet`);
+    return null;
+  } catch (error) {
+    console.error(`❌ Error reading setting "${key}":`, error.message);
+    return null;
+  }
+}
+
+// Check if first free booking is enabled (reads from Settings sheet)
+async function isFirstFreeBookingEnabled() {
+  const value = await getSetting('FirstFreeBookingEnabled');
+  // Default to Yes if setting not found (backward compatible)
+  if (value === null) return true;
+  return value.trim().toLowerCase() === 'yes';
 }
 
 // Keep all your existing functions below this line...
@@ -643,6 +675,7 @@ module.exports = {
   getLockIdForPod,          // NEW: Export lock ID lookup
   logSupportRequest,
   logError,
+  isFirstFreeBookingEnabled, // NEW: Settings-based config
   getTTLockTokens,         // NEW: TTLock token management
   saveTTLockTokens,        // NEW: TTLock token management
   shouldRefreshTTLockToken // NEW: TTLock token management
