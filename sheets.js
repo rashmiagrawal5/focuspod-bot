@@ -166,7 +166,15 @@ async function addNewUser(phone) {
     });
 
     const rows = res.data.values || [];
-    const nextUserId = rows.length + 1;
+    // Find the highest existing UserId to avoid duplicates after deletions
+    let maxId = 0;
+    for (const row of rows) {
+      const id = parseInt(row[0]);
+      if (!isNaN(id) && id > maxId) {
+        maxId = id;
+      }
+    }
+    const nextUserId = maxId + 1;
 
     console.log(`🔢 Creating new user with ID: ${nextUserId}, Phone: ${phone}`);
 
